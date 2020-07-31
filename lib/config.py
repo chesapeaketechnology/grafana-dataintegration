@@ -23,6 +23,7 @@ class DatabaseConfig:
     database: str
     user: str
     password: str
+    schema: str
 
 
 class Configuration:

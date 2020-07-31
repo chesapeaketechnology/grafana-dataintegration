@@ -1,11 +1,41 @@
 import json
-from dataclasses import dataclass, asdict
+from abc import abstractmethod
+from dataclasses import dataclass, asdict, fields
 from datetime import datetime
 from pprint import pprint
+import logging
 
+import psycopg2
+
+from lib.config import DatabaseConfig
+
+logger = logging.getLogger(__name__)
+
+class Persistent:
+    @property
+    @abstractmethod
+    def table_name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def schema_version(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def create_table_statement(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def insert_statement(self) -> tuple:
+        pass
 
 @dataclass
 class Message:
+    message_type: str = 'Message'
+    message_version: str = '0.1'
     device_serial_number: str = None
     device_time: str = None
     latitude: float = None
@@ -20,6 +50,10 @@ class Message:
         if self.device_time:
             return datetime.fromtimestamp(int(self.device_time)/1000)
         return datetime.fromtimestamp(0)
+
+    @property
+    def device_timestamp(self):
+        return self.device_datetime.timestamp()
 
     @staticmethod
     def create(data_type: str, data: dict):
@@ -38,6 +72,11 @@ class Message:
         return None
 
     @classmethod
+    def fields(cls):
+        return fields(cls)
+        # field_types = {field.name: field.type for field in fields(MyClass)}
+
+    @classmethod
     def from_dict(cls, data: dict):
         try:
             return cls(**data)
@@ -47,7 +86,9 @@ class Message:
 
 
 @dataclass
-class LTEMessage(Message):
+class LTEMessage(Message, Persistent):
+    message_type: str = 'LTERecord'
+    message_version: str = '0.1'
     ci: int = None    # cell identification
     earfcn: int = None     # E-UTRA Absolute Radio Frequency
     group_number: int = None   # Used to group records at a single point, (1 active record with multiple neighbor records)
@@ -67,6 +108,91 @@ class LTEMessage(Message):
             data['tac'] = data['ta']
             del data['ta']
         return super().from_dict(data)
+
+    @property
+    def table_name(self):
+        return "lte_message"
+
+    @property
+    def create_table_statement(self) -> str:
+        return """
+            create table public.lte_message
+            (
+                device_serial_number text,
+                device_timestamp timestamp with time zone,
+                device_time numeric,
+                latitude numeric,
+                longitude numeric,
+                altitude numeric,
+                mission_id text,
+                record_number integer,
+                ci integer,
+                earfcn integer,
+                group_number integer,
+                mcc integer,
+                mnc integer,
+                pci integer,
+                rsrp numeric,
+                rsrq numeric,
+                serving_cell boolean,
+                tac integer,
+                lte_bandwidth text,
+                provider text
+            );
+            
+            alter table public.lte_message owner to postgres;
+        """
+
+    @property
+    def insert_statement(self) -> tuple:
+        stmt = """INSERT INTO public.messages (
+                    device_serial_number, 
+                    device_timestamp,
+                    device_time, 
+                    latitude,
+                    longitude,
+                    altitude,
+                    mission_id,
+                    record_number,
+                    ci,
+                    earfcn,
+                    group_number,
+                    mcc,
+                    mnc,
+                    pci,
+                    rsrp,
+                    rsrq,
+                    serving_cell,
+                    tac,
+                    lte_bandwidth,
+                    provider) 
+                   VALUES (
+                     %%s, %s, %s, %s, %s, %s, %s, s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
+                   );
+                """
+        values = (
+            self.device_serial_number,
+            self.device_timestamp,
+            self.device_time,
+            self.latitude,
+            self.longitude,
+            self.altitude,
+            self.mission_id,
+            self.record_number,
+            self.ci,
+            self.earfcn,
+            self.group_number,
+            self.mcc,
+            self.mnc,
+            self.pci,
+            self.rsrp,
+            self.rsrq,
+            self.servingCell,
+            self.tac,
+            self.lteBandwidth,
+            self.provider
+        )
+        return stmt, values
 
 
 @dataclass
@@ -113,3 +239,8 @@ class MessageEncoder(json.JSONEncoder):
             return d
         # Base class default() raises TypeError:
         return json.JSONEncoder.default(self, obj)
+
+
+
+# print(LTEMessage.fields())
+
