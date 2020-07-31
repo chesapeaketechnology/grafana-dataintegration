@@ -1,10 +1,10 @@
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import List
 
 import psycopg2
 
-from lib.config import DatabaseConfig
-from lib.message import Message
+from app.lib.config import DatabaseConfig
+from app.lib.message import Message
 
 
 class Adapter:
