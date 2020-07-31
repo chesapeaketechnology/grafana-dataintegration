@@ -1,7 +1,7 @@
 import json
 
-from app.lib.adapter import Adapter
-from app.lib.message import Message
+from lib.adapter import Adapter
+from lib.message import Message
 
 
 class MessageHandler:

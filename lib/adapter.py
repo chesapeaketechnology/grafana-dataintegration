@@ -3,8 +3,8 @@ from typing import List
 
 import psycopg2
 
-from app.lib.config import DatabaseConfig
-from app.lib.message import Message
+from lib.config import DatabaseConfig
+from lib.message import Message
 
 
 class Adapter:
