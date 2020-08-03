@@ -5,11 +5,8 @@ from datetime import datetime
 from pprint import pprint
 import logging
 
-import psycopg2
-
-from lib.config import DatabaseConfig
-
 logger = logging.getLogger(__name__)
+
 
 class Persistent:
     @property
@@ -31,6 +28,7 @@ class Persistent:
     @abstractmethod
     def insert_statement(self) -> tuple:
         pass
+
 
 @dataclass
 class Message:
@@ -145,58 +143,27 @@ class LTEMessage(Message, Persistent):
 
     @property
     def insert_statement(self) -> tuple:
-        stmt = """INSERT INTO public.messages (
-                    device_serial_number, 
-                    device_timestamp,
-                    device_time, 
-                    latitude,
-                    longitude,
-                    altitude,
-                    mission_id,
-                    record_number,
-                    ci,
-                    earfcn,
-                    group_number,
-                    mcc,
-                    mnc,
-                    pci,
-                    rsrp,
-                    rsrq,
-                    serving_cell,
-                    tac,
-                    lte_bandwidth,
-                    provider) 
+        stmt = """INSERT INTO public.lte_message (device_serial_number, device_timestamp, device_time, latitude,
+                                                    longitude, altitude, mission_id, record_number, ci, earfcn, 
+                                                    group_number, mcc, mnc, pci, rsrp, rsrq, serving_cell, tac, 
+                                                    lte_bandwidth, provider) 
                    VALUES (
                      %%s, %s, %s, %s, %s, %s, %s, s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
                    );
                 """
         values = (
-            self.device_serial_number,
-            self.device_timestamp,
-            self.device_time,
-            self.latitude,
-            self.longitude,
-            self.altitude,
-            self.mission_id,
-            self.record_number,
-            self.ci,
-            self.earfcn,
-            self.group_number,
-            self.mcc,
-            self.mnc,
-            self.pci,
-            self.rsrp,
-            self.rsrq,
-            self.servingCell,
-            self.tac,
-            self.lteBandwidth,
-            self.provider
+            self.device_serial_number, self.device_timestamp, self.device_time, self.latitude,
+            self.longitude, self.altitude, self.mission_id, self.record_number, self.ci, self.earfcn,
+            self.group_number, self.mcc, self.mnc, self.pci, self.rsrp, self.rsrq, self.servingCell, self.tac,
+            self.lteBandwidth, self.provider
         )
         return stmt, values
 
 
 @dataclass
-class WifiMessage(Message):
+class WifiMessage(Message, Persistent):
+    message_type: str = 'WifiBeaconRecord'
+    message_version: str = '0.1'
     bssid: str = None
     ssid: str = None
     encryptionType: str = None
@@ -204,6 +171,60 @@ class WifiMessage(Message):
     channel: int = None
     frequency: int = None
     signalStrength: float = None
+
+    @property
+    def table_name(self):
+        return "wifi_message"
+
+    @property
+    def schema_version(self) -> str:
+        return "0.1"
+
+    @property
+    def create_table_statement(self) -> str:
+        return """
+                create table public.wifi_message
+                (
+                    device_serial_number text
+                    device_timestamp timestamp with time zone,
+                    device_time numeric,
+                    latitude numeric,
+                    longitude numeric,
+                    altitude numeric,
+                    mission_id text,
+                    record_number integer,
+                    device_name text,
+                    bssid text,
+                    ssid text,
+                    encryption_type text,
+                    wps boolean,
+                    channel integer,
+                    frequency integer,
+                    signal_strength numeric
+                );
+
+                alter table public.wifi_message owner to postgres;
+            """
+
+    @property
+    def insert_statement(self) -> tuple:
+        stmt = """INSERT INTO public.wifi_message ( 
+                    device_serial_number, device_timestamp, device_time, latitude, 
+                    longitude, altitude, mission_id, record_number, device_name, 
+                    bssid, ssid, encryption_type, wps, channel, frequency, 
+                    signal_strength
+            ) 
+           VALUES (
+             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
+           );
+        """
+        values = (
+            self.device_serial_number, self.device_timestamp, self.device_time, self.latitude,
+            self.longitude, self.altitude, self.mission_id, self.record_number, self.device_name,
+            self.bssid, self.encryptionType, self.wps, self.channel, self.frequency,
+            self.signalStrength
+        )
+        return stmt, values
 
 
 @dataclass
