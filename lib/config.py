@@ -43,10 +43,3 @@ class Configuration:
             config_data = yaml.safe_load(file)
             consumer_configurations = [ConsumerConfig(**d) for d in config_data['consumers']]
             return consumer_configurations
-
-
-
-config = Configuration(config_file='../config.yaml')
-consumers = config.get_consumers()
-print(consumers)
-print(config.get_database_config())
