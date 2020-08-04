@@ -29,7 +29,7 @@ class PostgresStorageDelegate(StorageDelegate):
 
     @property
     def connection(self):
-        if not self.connection:
+        if self._connection is None:
             self._connection = psycopg2.connect(
                 host=self.config.host,
                 port=self.config.port,
@@ -45,7 +45,8 @@ class PostgresStorageDelegate(StorageDelegate):
         self.connection.autocommit = True
         stmt = """create table public.message_version
                   (
-                      message_type varchar(128),
+                      message_type varchar(128) not null 
+                      constraint message_version_pk primary key,
                       version varchar(10)
                   );
                   alter table public.message_version owner to postgres
@@ -84,18 +85,21 @@ class PostgresStorageDelegate(StorageDelegate):
         """
         cursor.execute(version_stmt, (message.message_type, message.message_version))
 
+# TODO: - Modify to take a list of messages to facilitate batch writes.
     def save(self, message: (Message, Persistent)):
         # do the insert and look for errors to save time
         cursor = self.connection.cursor()
         self.connection.autocommit = True
         try:
-            cursor.execute(message.insert_statement)
+            (stmt, values) = message.insert_statement
+            cursor.execute(stmt, values)
         except Exception as e:
             logger.warning("Unable to insert row, checking to ensure table exists.")
             if not self.table_exists(message.table_name):
                 self.create_table(message)
             try:
-                cursor.execute(message.insert_statement)
+                (stmt, values) = message.insert_statement
+                cursor.execute(stmt, values)
             except Exception as e:
                 logger.exception(f"Unable to store message of type {message.message_type}. {str(e)}")
                 raise StorageException(f"Unable to store message of type {message.message_type}. {str(e)}") from e

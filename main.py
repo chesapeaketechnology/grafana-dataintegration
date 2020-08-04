@@ -1,13 +1,12 @@
 import asyncio
-from multiprocessing import Process
-from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential
+from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential, PartitionContext
 from lib.config import ConsumerConfig, Configuration
 from lib.handler import MessageHandler
 from lib.storage import StorageDelegate, PostgresStorageDelegate
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -21,34 +20,23 @@ async def consume(config: ConsumerConfig, storage_delegate: StorageDelegate):
         credential=EventHubSharedKeyCredential(config.shared_access_policy, config.primary_key)
     )
 
-    handler = MessageHandler(storage_delegate=storage_delegate, buffer_size=config.buffer_size)
+    handler = MessageHandler(message_type=config.topic, storage_delegate=storage_delegate, buffer_size=config.buffer_size)
+
     async with client:
         # Call the receive method.
-        # await client.receive(on_event=handler.received_event)
-        await client.receive(on_event=lambda  partition_context, event: print("Received the event: \"{}\" from the partition with ID: \"{}\""
-                      .format(event.body_as_str(encoding='UTF-8'), partition_context.partition_id)))
+        # TODO - Store the state to avoid missing messages.
+        # TODO - Look into running multiple processes on the same topic to help with load & availability
+        await client.receive(on_event=handler.received_event, starting_position=-1)
 
 
-async def main():
+# TODO: Change to using environment variables for configuration.
+if __name__ == '__main__':
     dir_path = os.path.dirname(os.path.realpath(__file__))
     config_path = os.path.join(dir_path, 'config.yaml')
     config = Configuration(config_file=config_path)
     configs = config.get_consumers()
     storage_delegate = PostgresStorageDelegate(config=config.get_database_config())
-    # for config in configs:
-    #     # p = Process(target=consume, kwargs={'config': config, 'storage_delegate': storage_delegate})
-    #     # p.start()
-    #     await consume(config=config, storage_delegate=storage_delegate)
-    #     # asyncio.create_task(consume(config=config, storage_delegate=storage_delegate))
-    await consume(config=configs[0], storage_delegate=storage_delegate)
 
-if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    # Run the main method.
-    loop.run_until_complete(main())
-    # try:
-    #     main()
-    #     loop.run_forever()
-    # finally:
-    #     loop.run_until_complete(loop.shutdown_asyncgens())
-    #     loop.close()
+    loop.run_until_complete(consume(config=configs[0], storage_delegate=storage_delegate))
+

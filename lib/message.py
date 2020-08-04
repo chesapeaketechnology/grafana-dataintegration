@@ -51,7 +51,7 @@ class Message:
 
     @property
     def device_timestamp(self):
-        return self.device_datetime.timestamp()
+        return self.device_datetime
 
     @staticmethod
     def create(data_type: str, data: dict):
@@ -148,7 +148,7 @@ class LTEMessage(Message, Persistent):
                                                     group_number, mcc, mnc, pci, rsrp, rsrq, serving_cell, tac, 
                                                     lte_bandwidth, provider) 
                    VALUES (
-                     %%s, %s, %s, %s, %s, %s, %s, s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
                    );
                 """
         values = (
