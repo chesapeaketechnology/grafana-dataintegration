@@ -24,6 +24,7 @@ class MessageHandler:
         try:
             logger.debug(f"Received the event: '{event.body_as_str(encoding='UTF-8') if event else 'None'}'"
                          f" from the partition with ID: '{partition_context.partition_id}'")
+            logger.debug(partition_context)
 
             data = json.loads(event.body_as_str(encoding='UTF-8'))
             self.buffer.append(Message.create(self.message_type, data))
