@@ -95,11 +95,11 @@ class PostgresStorageDelegate(StorageDelegate):
             cursor.execute(stmt, values)
         except Exception as e:
             logger.warning("Unable to insert row, checking to ensure table exists.")
-            if not self.table_exists(message.table_name):
-                self.create_table(message)
             try:
-                (stmt, values) = message.insert_statement
-                cursor.execute(stmt, values)
+                if not self.table_exists(message.table_name):
+                    self.create_table(message)
+                    (stmt, values) = message.insert_statement
+                    cursor.execute(stmt, values)
             except Exception as e:
                 logger.exception(f"Unable to store message of type {message.message_type}. {str(e)}")
                 raise StorageException(f"Unable to store message of type {message.message_type}. {str(e)}") from e

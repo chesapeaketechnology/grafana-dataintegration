@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict, fields
 from datetime import datetime
 from pprint import pprint
 import logging
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,13 @@ class Message:
     @property
     def device_timestamp(self):
         return self.device_datetime
+
+    @property
+    def unique_id(self):
+        d = vars(self)
+        hash_string = ''.join([str(d[x]) for x in sorted(d.keys())])
+        sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
+        return sha_signature
 
     @staticmethod
     def create(data_type: str, data: dict):
@@ -116,9 +124,12 @@ class LTEMessage(Message, Persistent):
         return """
             create table public.lte_message
             (
+                id varchar(64) not null 
+                    constraint lte_message_pk primary key,
                 device_serial_number text,
                 device_timestamp timestamp with time zone,
                 device_time numeric,
+                device_name text,
                 latitude numeric,
                 longitude numeric,
                 altitude numeric,
@@ -135,7 +146,9 @@ class LTEMessage(Message, Persistent):
                 serving_cell boolean,
                 tac integer,
                 lte_bandwidth text,
-                provider text
+                provider text,
+                message_type text,
+                message_version text
             );
             
             alter table public.lte_message owner to postgres;
@@ -143,20 +156,24 @@ class LTEMessage(Message, Persistent):
 
     @property
     def insert_statement(self) -> tuple:
-        stmt = """INSERT INTO public.lte_message (device_serial_number, device_timestamp, device_time, latitude,
-                                                    longitude, altitude, mission_id, record_number, ci, earfcn, 
-                                                    group_number, mcc, mnc, pci, rsrp, rsrq, serving_cell, tac, 
-                                                    lte_bandwidth, provider) 
+        stmt = """INSERT INTO public.lte_message (id, device_serial_number, device_timestamp, device_time, device_name, 
+                                                    latitude, longitude, altitude, mission_id, record_number, ci, 
+                                                    earfcn, group_number, mcc, mnc, pci, rsrp, rsrq, serving_cell, tac, 
+                                                    lte_bandwidth, provider, message_type, message_version) 
                    VALUES (
-                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
-                   );
+                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s  
+                   )
+                   ON CONFLICT DO NOTHING;
                 """
         values = (
-            self.device_serial_number, self.device_timestamp, self.device_time, self.latitude,
-            self.longitude, self.altitude, self.mission_id, self.record_number, self.ci, self.earfcn,
-            self.group_number, self.mcc, self.mnc, self.pci, self.rsrp, self.rsrq, self.servingCell, self.tac,
-            self.lteBandwidth, self.provider
+            self.unique_id, self.device_serial_number, self.device_timestamp, self.device_time,
+            self.device_name, self.latitude, self.longitude, self.altitude, self.mission_id,
+            self.record_number, self.ci, self.earfcn, self.group_number,
+            self.mcc, self.mnc, self.pci, self.rsrp, self.rsrq,
+            self.servingCell, self.tac, self.lteBandwidth, self.provider,
+            self.message_type, self.message_version
         )
+
         return stmt, values
 
 
@@ -188,6 +205,7 @@ class WifiMessage(Message, Persistent):
                     device_serial_number text
                     device_timestamp timestamp with time zone,
                     device_time numeric,
+                    device_name text,
                     latitude numeric,
                     longitude numeric,
                     altitude numeric,
@@ -200,7 +218,9 @@ class WifiMessage(Message, Persistent):
                     wps boolean,
                     channel integer,
                     frequency integer,
-                    signal_strength numeric
+                    signal_strength numeric,
+                    message_type text,
+                    message_version text
                 );
 
                 alter table public.wifi_message owner to postgres;
@@ -209,20 +229,20 @@ class WifiMessage(Message, Persistent):
     @property
     def insert_statement(self) -> tuple:
         stmt = """INSERT INTO public.wifi_message ( 
-                    device_serial_number, device_timestamp, device_time, latitude, 
-                    longitude, altitude, mission_id, record_number, device_name, 
+                    device_serial_number, device_timestamp, device_time, device_name, 
+                    latitude, longitude, altitude, mission_id, record_number,  
                     bssid, ssid, encryption_type, wps, channel, frequency, 
                     signal_strength
             ) 
            VALUES (
-             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s 
+             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
            );
         """
         values = (
-            self.device_serial_number, self.device_timestamp, self.device_time, self.latitude,
-            self.longitude, self.altitude, self.mission_id, self.record_number, self.device_name,
+            self.device_serial_number, self.device_timestamp, self.device_time, self.device_name,
+            self.latitude, self.longitude, self.altitude, self.mission_id, self.record_number,
             self.bssid, self.encryptionType, self.wps, self.channel, self.frequency,
-            self.signalStrength
+            self.signalStrength, self.message_type, self.message_version
         )
         return stmt, values
 
