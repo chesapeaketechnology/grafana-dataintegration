@@ -2,7 +2,7 @@ import json
 from typing import List
 
 from lib.message import Message
-from lib.storage import StorageDelegate
+from lib.storage import StorageDelegate, StorageException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,10 @@ class MessageHandler:
             data = json.loads(event.body_as_str(encoding='UTF-8'))
             self.buffer.append(Message.create(self.message_type, data))
             if len(self.buffer) > self.buffer_size:
-                for message in self.buffer:
-                    self.storage_delegate.save(message)
+                try:
+                    self.storage_delegate.save(self.buffer)
+                except StorageException as se:
+                    logger.fatal(se)
                 self.buffer.clear()
 
             # Update the checkpoint so that the program doesn't read the events

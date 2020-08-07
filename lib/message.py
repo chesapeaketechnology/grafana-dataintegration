@@ -5,30 +5,41 @@ from datetime import datetime
 from pprint import pprint
 import logging
 import hashlib
+from typing import Union
+
+from packaging.specifiers import SpecifierSet
 
 logger = logging.getLogger(__name__)
 
 
 class Persistent:
-    @property
+    @staticmethod
     @abstractmethod
-    def table_name(self) -> str:
+    def table_name() -> str:
         pass
 
-    @property
+    @staticmethod
     @abstractmethod
-    def schema_version(self) -> str:
+    def create_table_statement() -> str:
         pass
 
-    @property
+    @staticmethod
     @abstractmethod
-    def create_table_statement(self) -> str:
+    def insert_statement() -> tuple:
         pass
 
-    @property
-    @abstractmethod
-    def insert_statement(self) -> tuple:
-        pass
+
+@dataclass
+class MessageType:
+    message_type: str
+    message_version: str
+
+
+@dataclass
+class MessageTypeSpecifier:
+    message_type: str
+    version_specifier: SpecifierSet
+    schema_version: str
 
 
 @dataclass
@@ -62,20 +73,32 @@ class Message:
         return sha_signature
 
     @staticmethod
-    def create(data_type: str, data: dict):
-        return Message.type_for(data_type).from_dict(data)
+    @abstractmethod
+    def supports() -> MessageTypeSpecifier:
+        pass
 
     @staticmethod
-    def type_for(data_type: str):
-        if data_type == "80211_beacon_message":
-            return WifiMessage
-        if data_type == "cdma_message":
-            return CDMAMessage
-        if data_type == "lte_message":
-            return LTEMessage
-        if data_type == "umts_message":
-            return UMTSMessage
-        return None
+    def registered_message_types():
+        return [LTEMessage]
+
+    @classmethod
+    def is_compatible_with(cls, message_type: MessageType):
+        message_type_specifier = cls.supports()
+        specifier_set = SpecifierSet(message_type_specifier.version_specifier)
+        return message_type.message_type == message_type_specifier.message_type \
+               and message_type.message_version in specifier_set
+
+    @staticmethod
+    def create(data: dict):
+        if 'message_type' not in data or 'message_version' not in data:
+            raise ValueError(f"Unsupported message [{data}].")
+        message_type = MessageType(message_type=data.get('message_type'), message_version=data.get('message_version'))
+        matching_type = next(filter(lambda t: t.is_compatible_with(message_type),
+                                    Message.registered_message_types()), None)
+        if matching_type:
+            return matching_type.from_dict(data)
+        else:
+            raise ValueError(f"Unsupported message type [{message_type}].")
 
     @classmethod
     def fields(cls):
@@ -89,6 +112,9 @@ class Message:
         except Exception as e:
             pprint(data)
             raise e
+
+
+PersistentMessage = Union[Message, Persistent]
 
 
 @dataclass
@@ -115,12 +141,18 @@ class LTEMessage(Message, Persistent):
             del data['ta']
         return super().from_dict(data)
 
-    @property
-    def table_name(self):
+    @staticmethod
+    def supports() -> MessageTypeSpecifier:
+        return MessageTypeSpecifier(message_type='LTERecord',
+                                    version_specifier=SpecifierSet('~=0.1.0'),
+                                    schema_version='0.1.0')
+
+    @staticmethod
+    def table_name():
         return "lte_message"
 
-    @property
-    def create_table_statement(self) -> str:
+    @staticmethod
+    def create_table_statement() -> str:
         return """
             create table public.lte_message
             (
@@ -154,28 +186,66 @@ class LTEMessage(Message, Persistent):
             alter table public.lte_message owner to postgres;
         """
 
-    @property
-    def insert_statement(self) -> tuple:
-        stmt = """INSERT INTO public.lte_message (id, device_serial_number, device_timestamp, device_time, device_name, 
-                                                    latitude, longitude, altitude, mission_id, record_number, ci, 
-                                                    earfcn, group_number, mcc, mnc, pci, rsrp, rsrq, serving_cell, tac, 
-                                                    lte_bandwidth, provider, message_type, message_version) 
-                   VALUES (
-                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s  
+    @staticmethod
+    def insert_statement() -> str:
+        return """INSERT INTO public.lte_message  
+                  VALUES (
+                    %(unique_id)s, 
+                    %(device_serial_number)s, 
+                    %(device_timestamp)s, 
+                    %(device_time)s, 
+                    %(device_name)s, 
+                    %(latitude)s, 
+                    %(longitude)s, 
+                    %(altitude)s, 
+                    %(mission_id)s, 
+                    %(record_number)s, 
+                    %(ci)s, 
+                    %(earfcn)s, 
+                    %(group_number)s, 
+                    %(mcc)s, 
+                    %(mnc)s, 
+                    %(pci)s, 
+                    %(rsrp)s, 
+                    %(rsrq)s, 
+                    %(servingCell)s, 
+                    %(tac)s, 
+                    %(lteBandwidth)s, 
+                    %(provider)s, 
+                    %(message_type)s, 
+                    %(message_version)s  
                    )
                    ON CONFLICT DO NOTHING;
                 """
-        values = (
-            self.unique_id, self.device_serial_number, self.device_timestamp, self.device_time,
-            self.device_name, self.latitude, self.longitude, self.altitude, self.mission_id,
-            self.record_number, self.ci, self.earfcn, self.group_number,
-            self.mcc, self.mnc, self.pci, self.rsrp, self.rsrq,
-            self.servingCell, self.tac, self.lteBandwidth, self.provider,
-            self.message_type, self.message_version
-        )
 
-        return stmt, values
-
+    # @property
+    # def insert_values(self):
+    #     return (
+    #         self.unique_id,
+    #         self.device_serial_number,
+    #         self.device_timestamp,
+    #         self.device_time,
+    #         self.device_name,
+    #         self.latitude,
+    #         self.longitude,
+    #         self.altitude,
+    #         self.mission_id,
+    #         self.record_number,
+    #         self.ci,
+    #         self.earfcn,
+    #         self.group_number,
+    #         self.mcc,
+    #         self.mnc,
+    #         self.pci,
+    #         self.rsrp,
+    #         self.rsrq,
+    #         self.servingCell,
+    #         self.tac,
+    #         self.lteBandwidth,
+    #         self.provider,
+    #         self.message_type,
+    #         self.message_version
+    #     )
 
 @dataclass
 class WifiMessage(Message, Persistent):
@@ -189,15 +259,12 @@ class WifiMessage(Message, Persistent):
     frequency: int = None
     signalStrength: float = None
 
-    @property
     def table_name(self):
         return "wifi_message"
 
-    @property
     def schema_version(self) -> str:
         return "0.1"
 
-    @property
     def create_table_statement(self) -> str:
         return """
                 create table public.wifi_message
@@ -226,7 +293,6 @@ class WifiMessage(Message, Persistent):
                 alter table public.wifi_message owner to postgres;
             """
 
-    @property
     def insert_statement(self) -> tuple:
         stmt = """INSERT INTO public.wifi_message ( 
                     device_serial_number, device_timestamp, device_time, device_name, 

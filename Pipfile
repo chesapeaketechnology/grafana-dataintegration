@@ -10,6 +10,7 @@ azure-eventhub = "*"
 azure-eventhub-checkpointstoreblob-aio = "*"
 pyyaml = "*"
 psycopg2 = "*"
+packaging = "*"
 
 [requires]
 python_version = "3.8"
