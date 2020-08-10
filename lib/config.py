@@ -56,19 +56,3 @@ class Configuration:
                 schema=environ.get('GDI_DB_SCHEMA')
             )
         )
-
-    # def __init__(self, config_file) -> None:
-    #     super().__init__()
-    #     self.config_file = config_file
-    #
-    # def get_database_config(self) -> DatabaseConfig:
-    #     with open(self.config_file, 'r') as file:
-    #         config_data = yaml.safe_load(file)
-    #         db_config = DatabaseConfig(**config_data['database'])
-    #         return db_config
-    #
-    # def get_consumers(self) -> List[ConsumerConfig]:
-    #     with open(self.config_file, 'r') as file:
-    #         config_data = yaml.safe_load(file)
-    #         consumer_configurations = [ConsumerConfig(**d) for d in config_data['consumers']]
-    #         return consumer_configurations
