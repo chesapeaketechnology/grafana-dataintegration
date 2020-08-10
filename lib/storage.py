@@ -13,7 +13,10 @@ from lib.migrations.migration import Migrations
 logger = logging.getLogger(__name__)
 
 
-class StorageException(Exception):
+class StorageError(Exception):
+    """
+    Indicates that there was an error storing data to the configured database.
+    """
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
@@ -28,13 +31,19 @@ class StorageVersionError(StorageError):
 
 
 class StorageDelegate:
+    """
+    Provides storage services for incoming data.
+    """
     @abstractmethod
     def save(self, messages: List[PersistentMessage]):
         pass
 
 
 class PostgresStorageDelegate(StorageDelegate):
-
+    """
+    Provides storage services using a configured postgres database. Configuration information
+    is provided via a DatabaseConfig object.
+    """
     def __init__(self, config: DatabaseConfig, message_class: Type[PersistentMessage]) -> None:
         super().__init__()
         self.config = config
@@ -61,6 +70,10 @@ class PostgresStorageDelegate(StorageDelegate):
 
     @property
     def connection(self):
+        """
+        Return the database connection. Will create the connection if it doesn't exist.
+        :return: db_api connection object
+        """
         if self._connection is None:
             self._connection = psycopg2.connect(
                 host=self.config.host,
@@ -73,7 +86,7 @@ class PostgresStorageDelegate(StorageDelegate):
         return self._connection
 
     def create_version_table(self):
-        """Create the version table."""
+        """Create the schema version table."""
         with self.connection.cursor() as cursor:
             stmt = """create table public.message_version
                       (

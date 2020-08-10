@@ -38,6 +38,12 @@ async def partition_closed(partition_context, reason):
 
 
 async def consume(config: ConsumerConfig, delegate: StorageDelegate):
+    """
+    Setup and start a message topic consumer and storage delegate.
+    :param config: A ConsumerConfig object
+    :param delegate: A Storage delegate object
+    :return: None
+    """
     # Create a consumer client for the event hub.
     logger.info(f"Consuming {config}")
     client = EventHubConsumerClient(
@@ -52,9 +58,6 @@ async def consume(config: ConsumerConfig, delegate: StorageDelegate):
     handler = MessageHandler(message_type=message_type, storage_delegate=delegate, buffer_size=config.buffer_size)
 
     async with client:
-        # Call the receive method.
-        # TODO - Store the state to avoid missing messages.
-        # TODO - Look into running multiple processes on the same topic to help with load & availability
         await client.receive(on_event=handler.received_event,
                              on_error=errored,
                              on_partition_close=partition_closed,

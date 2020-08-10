@@ -9,8 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class MessageHandler:
-
-    def __init__(self, message_type: str, storage_delegate: StorageDelegate, buffer_size: int = 1) -> None:
+    """
+    Handle the receipt of a new message.  Identity the type of the message and instantiate the appropriate
+    Message type. Provides for buffering N messages before storing to the storage subsystem and coordinates
+    storage of the message.
+    """
+    def __init__(self, message_type: MessageType, storage_delegate: StorageDelegate, buffer_size: int = 1) -> None:
         super().__init__()
         self.storage_delegate = storage_delegate
         self.buffer_size = buffer_size
