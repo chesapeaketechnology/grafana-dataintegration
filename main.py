@@ -1,4 +1,6 @@
 import asyncio
+from pprint import pformat
+
 from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential, PartitionContext
 from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 

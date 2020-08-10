@@ -9,8 +9,8 @@ verify_ssl = true
 azure-eventhub = "*"
 azure-eventhub-checkpointstoreblob-aio = "*"
 pyyaml = "*"
-psycopg2 = "*"
 packaging = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.8"
