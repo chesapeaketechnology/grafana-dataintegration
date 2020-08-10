@@ -121,27 +121,25 @@ class PostgresStorageDelegate(StorageDelegate):
         :return: None
         """
         if messages:
-            message_type = messages[0]
-            if self.version_supported(message_type):
-                statement = messages[0].insert_statement()
-                try:
-                    self.connection.autocommit = True
-                    with self.connection.cursor() as cursor:
+            statement = self.message_class.insert_statement()
+            try:
+                self.connection.autocommit = True
+                with self.connection.cursor() as cursor:
 
-                        all_messages = [{
-                            **message,
-                            'device_datetime': message.device_datetime,
-                            'device_timestamp': message.device_timestamp,
-                            'unique_id': message.unique_id
-                        } for message in messages]
+                    all_messages = [{
+                        **vars(message),
+                        'device_datetime': message.device_datetime,
+                        'device_timestamp': message.device_timestamp,
+                        'unique_id': message.unique_id
+                    } for message in messages]
 
-                        try:
+                    try:
+                        execute_batch(cursor, statement, all_messages)
+                    except Exception as e:
+                        logger.warning("Unable to insert row, checking to ensure table exists.")
+                        if not self.table_exists(self.message_class):
+                            self.create_table(self.message_class)
                             execute_batch(cursor, statement, all_messages)
-                        except Exception as e:
-                            logger.warning("Unable to insert row, checking to ensure table exists.")
-                            if not self.table_exists(message_type.table_name()):
-                                self.create_table(message_type)
-                                execute_batch(cursor, statement, all_messages)
-                except Exception as e:
-                    raise StorageException(f"Unable to store messages [{messages}] of "
-                                           f"type {message_type.message_type}") from e
+            except Exception as e:
+                raise StorageError(f"Unable to store messages [{messages}] of "
+                                       f"type {self.message_class.message_type}") from e
