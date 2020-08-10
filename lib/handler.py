@@ -27,11 +27,11 @@ class MessageHandler:
             logger.debug(partition_context)
 
             data = json.loads(event.body_as_str(encoding='UTF-8'))
-            self.buffer.append(Message.create(self.message_type, data))
+            self.buffer.append(Message.create(data, message_type=self.message_type))
             if len(self.buffer) > self.buffer_size:
                 try:
                     self.storage_delegate.save(self.buffer)
-                except StorageException as se:
+                except StorageError as se:
                     logger.fatal(se)
                 self.buffer.clear()
 

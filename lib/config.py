@@ -5,7 +5,8 @@ from os import environ
 @dataclass
 class ConsumerConfig:
     topic: str
-    messageType: str
+    message_type: str
+    message_version: str
     key: str
     fully_qualified_namespace: str
     shared_access_policy: str
@@ -35,7 +36,8 @@ class Configuration:
         return Configuration(
             consumer=ConsumerConfig(
                 topic=environ.get('GDI_TOPIC'),
-                messageType=environ.get('GDI_MESSAGE_TYPE'),
+                message_type=environ.get('GDI_MESSAGE_TYPE'),
+                message_version=environ.get('GDI_MESSAGE_VERSION'),
                 key=environ.get('GDI_KEY'),
                 fully_qualified_namespace=environ.get('GDI_NAMESPACE'),
                 shared_access_policy=environ.get('GDI_SHARED_ACCESS_POLICY'),

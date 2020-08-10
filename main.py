@@ -45,7 +45,9 @@ async def consume(config: ConsumerConfig, delegate: StorageDelegate):
         credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key)
     )
 
-    handler = MessageHandler(message_type=config.topic, storage_delegate=delegate, buffer_size=config.buffer_size)
+    message_type = MessageType(message_type=config.message_type,
+                               message_version=config.message_version)
+    handler = MessageHandler(message_type=message_type, storage_delegate=delegate, buffer_size=config.buffer_size)
 
     async with client:
         # Call the receive method.

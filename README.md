@@ -5,6 +5,7 @@ Integration between Grafana and the Data science pipeline
 ## Required Environment Variables
 * GDI_TOPIC - EventHub topic name
 * GDI_MESSAGE_TYPE - The message type as defined in https://messaging.networksurvey.app/
+* GDI_MESSAGE_VERSION - The message type version as defined in https://messaging.networksurvey.app/
 * GDI_KEY - the EventHub access key
 * GDI_NAMESPACE - the fully qualified namespace for the EventHub namespace
 * GDI_SHARED_ACCESS_POLICY - The EventHub shared access policy name

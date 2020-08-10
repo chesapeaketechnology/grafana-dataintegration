@@ -2,11 +2,13 @@ from abc import abstractmethod
 from typing import List, Type
 
 import psycopg2
-from psycopg2.extras import execute_batch
+from psycopg2.extras import execute_batch, DictCursor
 
 from lib.config import DatabaseConfig
 from lib.message import PersistentMessage, Message
 import logging
+
+from lib.migrations.migration import Migrations
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,15 @@ logger = logging.getLogger(__name__)
 class StorageException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+
+class StorageVersionError(StorageError):
+    """
+    Indicates an incompatibility between the message type and the existing database schema.
+    """
+    def __init__(self, current_schema_version: str, *args: object) -> None:
+        super().__init__(*args)
+        self.current_schema_version = current_schema_version
 
 
 class StorageDelegate:
@@ -28,14 +39,25 @@ class PostgresStorageDelegate(StorageDelegate):
         super().__init__()
         self.config = config
         self._connection = None
+        self.message_class = message_class
+        self.validate_schema(message_class)
 
     def validate_schema(self, message_class: Type[PersistentMessage]):
+        if not self.table_exists(message_class):
+            self.create_table(message_class)
         try:
-            if not self.table_exists(message_class):
-                self.create_table(message_class)
-            self.version_supported(message_class)
-        except Exception as e:
-
+            if self.version_supported(message_class):
+                return True
+        except StorageVersionError as sve:
+            # See if we can find any migrations
+            message_specifier = message_class.supports()
+            migrations = Migrations.find_migration_for(from_version=sve.current_schema_version,
+                                                       to_version=message_specifier.schema_version)
+            if migrations:
+                migrations.execute(self.connection)
+                return True
+            raise StorageError(f"Message type with specifier {message_specifier} is not supported for this "
+                               f"database version and migrations were not found.")
 
     @property
     def connection(self):
@@ -72,28 +94,40 @@ class PostgresStorageDelegate(StorageDelegate):
             return cursor.rowcount > 0
 
     def version_supported(self, message_class: Type[PersistentMessage]):
+        """
+        Determine is the version of the specified message type is currently supported by the configured database.
+        :param message_class: The class "type" of the message being handled by this instance.
+        :return: True if supported, else StorageError or StorageVersionError
+        """
+        message_specifier = message_class.supports()
+
         def __version_supported():
-            with self.connection.cursor() as cursor:
+            with self.connection.cursor(cursor_factory=DictCursor) as cursor:
                 cursor.execute(
                     "SELECT * FROM public.message_version "
-                    "WHERE message_type = %(message_type)s",
+                    "WHERE message_type = %(message_type)s "
+                    "ORDER BY version desc",
                     {'message_type': message_class.table_name()}
                 )
-                cursor.foreach
                 if cursor.rowcount < 1:
-                    raise StorageException(f"Database schema does not support message type {message_type} "
-                                           f"with schema version of {schema_version}")
-                return True
+                    raise StorageError(f"Database schema does not support message type {message_specifier.message_type} "
+                                           f"with schema version of {message_specifier.schema_version}")
+
+                record = cursor.fetchone()
+                current_schema_version = record['version']
+
+                # Assumes backward compatibility, this may need to be modified in the future.
+                if current_schema_version >= message_specifier.schema_version:
+                    return True
+                else:
+                    raise StorageVersionError(current_schema_version=current_schema_version)
         try:
             return __version_supported()
         except Exception as e:
             logger.warning(e)
-            try:
-                if not self.version_table_exists():
-                    self.create_version_table()
-                    return __version_supported()
-            except Exception as pe:
-                raise pe
+            if not self.version_table_exists():
+                self.create_version_table()
+                return __version_supported()
 
     def table_exists(self, message_class: Type[PersistentMessage]):
         """Determine if the table exists in the configured database."""
