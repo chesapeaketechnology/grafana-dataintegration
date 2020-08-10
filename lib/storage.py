@@ -5,7 +5,7 @@ import psycopg2
 from psycopg2.extras import execute_batch, DictCursor
 
 from lib.config import DatabaseConfig
-from lib.message import PersistentMessage, Message
+from lib.messages.message import PersistentMessage
 import logging
 
 from lib.migrations.migration import Migrations

@@ -2,6 +2,8 @@ import asyncio
 from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential, PartitionContext
 from lib.config import ConsumerConfig, Configuration
 from lib.handler import MessageHandler
+from lib.messages.message import MessageType
+from lib.messages.message_repository import MessageTypeRepository
 from lib.storage import StorageDelegate, PostgresStorageDelegate
 import os
 import logging
@@ -61,7 +63,14 @@ async def consume(config: ConsumerConfig, delegate: StorageDelegate):
 
 if __name__ == '__main__':
     configuration = Configuration.get_config()
-    storage_delegate = PostgresStorageDelegate(config=configuration.database)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(consume(config=configuration.consumer, delegate=storage_delegate))
+    logger.info(f"Starting Grafana DataIntegration with \n{pformat(vars(configuration))}")
+    message_type = MessageType(message_type=configuration.consumer.message_type,
+                               message_version=configuration.consumer.message_version)
+    message_class = MessageTypeRepository.find_message_type(message_type)
+    if message_class:
+        storage_delegate = PostgresStorageDelegate(config=configuration.database, message_class=message_class)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(consume(config=configuration.consumer, delegate=storage_delegate))
+    else:
+        raise ValueError("Unable to find configured message type.")
 

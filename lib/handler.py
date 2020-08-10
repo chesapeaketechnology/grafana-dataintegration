@@ -1,8 +1,8 @@
 import json
 from typing import List
 
-from lib.message import Message
-from lib.storage import StorageDelegate, StorageException
+from lib.messages.message import Message, MessageType
+from lib.storage import StorageDelegate, StorageError
 import logging
 
 logger = logging.getLogger(__name__)
