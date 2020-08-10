@@ -59,9 +59,9 @@ class PostgresStorageDelegate(StorageDelegate):
                 return True
         except StorageVersionError as sve:
             # See if we can find any migrations
-            message_specifier = message_class.supports()
+            message_specifier = message_class.latest_supported()
             migrations = Migrations.find_migration_for(from_version=sve.current_schema_version,
-                                                       to_version=message_specifier.schema_version)
+                                                       to_version=message_specifier.storage_schema_version)
             if migrations:
                 migrations.execute(self.connection)
                 return True
@@ -112,7 +112,7 @@ class PostgresStorageDelegate(StorageDelegate):
         :param message_class: The class "type" of the message being handled by this instance.
         :return: True if supported, else StorageError or StorageVersionError
         """
-        message_specifier = message_class.supports()
+        message_specifier = message_class.latest_supported()
 
         def __version_supported():
             with self.connection.cursor(cursor_factory=DictCursor) as cursor:
@@ -123,14 +123,15 @@ class PostgresStorageDelegate(StorageDelegate):
                     {'message_type': message_class.table_name()}
                 )
                 if cursor.rowcount < 1:
-                    raise StorageError(f"Database schema does not support message type {message_specifier.message_type} "
-                                           f"with schema version of {message_specifier.schema_version}")
+                    raise StorageError(f"Database schema does not support message "
+                                       f"type {message_specifier.message_type} with schema "
+                                       f"version of {message_specifier.storage_schema_version}")
 
                 record = cursor.fetchone()
                 current_schema_version = record['version']
 
                 # Assumes backward compatibility, this may need to be modified in the future.
-                if current_schema_version >= message_specifier.schema_version:
+                if current_schema_version >= message_specifier.storage_schema_version:
                     return True
                 else:
                     raise StorageVersionError(current_schema_version=current_schema_version)
@@ -159,7 +160,8 @@ class PostgresStorageDelegate(StorageDelegate):
                 ON CONFLICT (message_type)
                 DO UPDATE SET version = EXCLUDED.version 
             """
-            cursor.execute(version_stmt, (message_class.table_name(), message_class.supports().schema_version))
+            cursor.execute(version_stmt, (message_class.table_name(),
+                                          message_class.latest_supported().storage_schema_version))
 
     def save(self, messages: List[PersistentMessage]):
         """
@@ -189,4 +191,4 @@ class PostgresStorageDelegate(StorageDelegate):
                             execute_batch(cursor, statement, all_messages)
             except Exception as e:
                 raise StorageError(f"Unable to store messages [{messages}] of "
-                                       f"type {self.message_class.message_type}") from e
+                                   f"type {self.message_class.message_type}") from e

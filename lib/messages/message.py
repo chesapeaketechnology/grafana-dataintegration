@@ -5,9 +5,9 @@ from datetime import datetime
 from pprint import pprint
 import logging
 import hashlib
-from typing import Union
+from typing import Union, List
 
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
 
 logger = logging.getLogger(__name__)
 
@@ -43,23 +43,27 @@ class Persistent:
         pass
 
 
-@dataclass
+@dataclass(order=True)
 class MessageType:
     """
     Type and version information for a given message
     """
     message_type: str
     message_version: str
+    storage_schema_version: str = None
 
 
-@dataclass
 class MessageTypeSpecifier:
-    """
-    Type compatibility information for a given message type.
-    """
-    message_type: str
-    version_specifier: SpecifierSet
-    schema_version: str
+    def __init__(self, message_type: str, version_specifier: str) -> None:
+        super().__init__()
+        self.message_type = message_type
+        try:
+            self.version_specifier = SpecifierSet(version_specifier)
+        except InvalidSpecifier:
+            try:
+                self.version_specifier = SpecifierSet(f"=={version_specifier}")
+            except InvalidSpecifier:
+                self.version_specifier = version_specifier
 
 
 @dataclass
@@ -95,17 +99,36 @@ class Message:
         sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
         return sha_signature
 
+    @staticmethod
+    @abstractmethod
+    def supports() -> List[MessageType]:
+        pass
 
     @staticmethod
     @abstractmethod
-    def supports() -> MessageTypeSpecifier:
+    def latest_supported() -> MessageType:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def earliest_supported() -> MessageType:
         pass
 
     @classmethod
-    def is_compatible_with(cls, message_type: MessageType):
-        message_type_specifier = cls.supports()
-        return message_type.message_type == message_type_specifier.message_type \
-               and message_type.message_version in message_type_specifier.version_specifier
+    def is_compatible_with(cls, message_type):
+        message_type_specifiers = sorted(cls.supports(), reverse=True)
+        if isinstance(message_type, MessageType):
+            for message_type_specifier in message_type_specifiers:
+                if message_type.message_type == message_type_specifier.message_type \
+                   and message_type.message_version == message_type_specifier.message_version:
+                    return True
+        elif isinstance(message_type, MessageTypeSpecifier):
+            for message_type_specifier in message_type_specifiers:
+                _message_type: MessageTypeSpecifier = message_type
+                if _message_type.message_type == message_type_specifier.message_type \
+                       and message_type_specifier.message_version in message_type.version_specifier:
+                    return True
+        return False
 
     @staticmethod
     def create(data: dict, message_type: MessageType = None):

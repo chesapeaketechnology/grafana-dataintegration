@@ -1,8 +1,6 @@
 from dataclasses import dataclass
-
-from packaging.specifiers import SpecifierSet
-
-from .message import Message, Persistent, MessageTypeSpecifier
+from typing import List
+from .message import Message, Persistent, MessageType
 
 
 @dataclass
@@ -11,7 +9,7 @@ class LTEMessage(Message, Persistent):
     message_version: str = '0.1'
     ci: int = None    # cell identification
     earfcn: int = None     # E-UTRA Absolute Radio Frequency
-    group_number: int = None   # Used to group records at a single point, (1 active record with multiple neighbor records)
+    group_number: int = None   # Used to group records at a single point, (1 active record, multiple neighbor records)
     mcc: int = None     # mobile country code
     mnc: int = None    # mobile network code
     pci: int = None    # physical cell identifier
@@ -30,10 +28,16 @@ class LTEMessage(Message, Persistent):
         return super().from_dict(data)
 
     @staticmethod
-    def supports() -> MessageTypeSpecifier:
-        return MessageTypeSpecifier(message_type='LteRecord',
-                                    version_specifier=SpecifierSet('~=0.1.0'),
-                                    schema_version='0.1.0')
+    def supports() -> List[MessageType]:
+        return sorted([MessageType(message_type='LteRecord', message_version='0.1.0', storage_schema_version='0.1')])
+
+    @staticmethod
+    def latest_supported() -> MessageType:
+        return LTEMessage.supports()[-1]
+
+    @staticmethod
+    def earliest_supported() -> MessageType:
+        return LTEMessage.supports()[0]
 
     @staticmethod
     def table_name():
@@ -105,4 +109,3 @@ class LTEMessage(Message, Persistent):
                    )
                    ON CONFLICT DO NOTHING;
                 """
-

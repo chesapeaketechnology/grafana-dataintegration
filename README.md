@@ -13,7 +13,7 @@ Integration between Grafana and the Data science pipeline
 * GDI_DB_PORT - The port for connecting to the integration database
 * GDI_DB_DATABASE - The name of the database within the database server
 * GDI_DB_USER - The user name to use when connecting to the database
-* GDI_DB_PASSWORD - The password to use when conencting to the database
+* GDI_DB_PASSWORD - The password to use when connecting to the database
 * GDI_DB_SCHEMA - The database schema
 * GDI_CHECKPOINT_STORE_CONNECTION - The connection string for azure blob storage in which to store checkpoints.
 * GDI_CHECKPOINT_STORE_CONTAINER - The azure blob storage container name in which to store checkpoints.

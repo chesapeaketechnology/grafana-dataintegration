@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from os import environ
 
+from lib.messages.message import MessageTypeSpecifier
+
 
 @dataclass
 class ConsumerConfig:
     topic: str
-    message_type: str
-    message_version: str
+    message_type_specifier: MessageTypeSpecifier
     key: str
     fully_qualified_namespace: str
     shared_access_policy: str
@@ -36,8 +37,7 @@ class Configuration:
         return Configuration(
             consumer=ConsumerConfig(
                 topic=environ.get('GDI_TOPIC'),
-                message_type=environ.get('GDI_MESSAGE_TYPE'),
-                message_version=environ.get('GDI_MESSAGE_VERSION'),
+                message_type_specifier = MessageTypeSpecifier(message_type=environ.get('GDI_MESSAGE_TYPE'), version_specifier=environ.get('GDI_MESSAGE_VERSION')),
                 key=environ.get('GDI_KEY'),
                 fully_qualified_namespace=environ.get('GDI_NAMESPACE'),
                 shared_access_policy=environ.get('GDI_SHARED_ACCESS_POLICY'),

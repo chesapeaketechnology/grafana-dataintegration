@@ -1,12 +1,13 @@
 import asyncio
 from pprint import pformat
+from typing import Type
 
 from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential, PartitionContext
 from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 
 from lib.config import ConsumerConfig, Configuration
 from lib.handler import MessageHandler
-from lib.messages.message import MessageType
+from lib.messages.message import MessageType, MessageTypeSpecifier, PersistentMessage
 from lib.messages.message_repository import MessageTypeRepository
 from lib.storage import StorageDelegate, PostgresStorageDelegate
 import os
@@ -41,7 +42,7 @@ async def partition_closed(partition_context, reason):
     ))
 
 
-async def consume(config: ConsumerConfig, delegate: StorageDelegate):
+async def consume(config: ConsumerConfig, delegate: StorageDelegate, message_class: Type[PersistentMessage]):
     """
     Setup and start a message topic consumer and storage delegate.
     :param config: A ConsumerConfig object
@@ -69,8 +70,7 @@ async def consume(config: ConsumerConfig, delegate: StorageDelegate):
             credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key)
         )
 
-    message_type = MessageType(message_type=config.message_type,
-                               message_version=config.message_version)
+    message_type = message_class.latest_supported()
     handler = MessageHandler(message_type=message_type, storage_delegate=delegate, buffer_size=config.buffer_size)
 
     async with client:
@@ -83,13 +83,14 @@ async def consume(config: ConsumerConfig, delegate: StorageDelegate):
 if __name__ == '__main__':
     configuration = Configuration.get_config()
     logger.info(f"Starting Grafana DataIntegration with \n{pformat(vars(configuration))}")
-    message_type = MessageType(message_type=configuration.consumer.message_type,
-                               message_version=configuration.consumer.message_version)
-    message_class = MessageTypeRepository.find_message_type(message_type)
+    message_type_specifier = configuration.consumer.message_type_specifier
+    message_class = MessageTypeRepository.find_message_type(message_type_specifier)
     if message_class:
         storage_delegate = PostgresStorageDelegate(config=configuration.database, message_class=message_class)
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(consume(config=configuration.consumer, delegate=storage_delegate))
+        loop.run_until_complete(consume(config=configuration.consumer,
+                                        delegate=storage_delegate,
+                                        message_class=message_class))
     else:
         raise ValueError("Unable to find configured message type.")
 
