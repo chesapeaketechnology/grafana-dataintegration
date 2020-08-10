@@ -1,5 +1,7 @@
 import asyncio
 from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential, PartitionContext
+from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
+
 from lib.config import ConsumerConfig, Configuration
 from lib.handler import MessageHandler
 from lib.messages.message import MessageType
@@ -46,12 +48,24 @@ async def consume(config: ConsumerConfig, delegate: StorageDelegate):
     """
     # Create a consumer client for the event hub.
     logger.info(f"Consuming {config}")
-    client = EventHubConsumerClient(
-        fully_qualified_namespace=config.fully_qualified_namespace,
-        consumer_group=config.consumer_group,
-        eventhub_name=config.topic,
-        credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key)
-    )
+    if config.checkpoint_store_conn_str and config.checkpoint_store_container_name:
+        # Use an azure blob storage container to store position within partition
+        checkpoint_store = BlobCheckpointStore.from_connection_string(config.checkpoint_store_conn_str,
+                                                                      config.checkpoint_store_container_name)
+        client = EventHubConsumerClient(
+            fully_qualified_namespace=config.fully_qualified_namespace,
+            consumer_group=config.consumer_group,
+            eventhub_name=config.topic,
+            credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key),
+            checkpoint_store=checkpoint_store
+        )
+    else:
+        client = EventHubConsumerClient(
+            fully_qualified_namespace=config.fully_qualified_namespace,
+            consumer_group=config.consumer_group,
+            eventhub_name=config.topic,
+            credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key)
+        )
 
     message_type = MessageType(message_type=config.message_type,
                                message_version=config.message_version)
