@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
-from .message import Message, Persistent, MessageType
+from .message import Message, MessageType
+from ..persistent import Persistent
 
 
 @dataclass

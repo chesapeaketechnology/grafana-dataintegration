@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from .message import Message, Persistent
+from .message import Message
+from ..persistent import Persistent
 
 
 @dataclass

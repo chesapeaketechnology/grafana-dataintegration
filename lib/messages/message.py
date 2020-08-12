@@ -9,38 +9,9 @@ from typing import Union, List
 
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 
+from lib.persistent import Persistent
+
 logger = logging.getLogger(__name__)
-
-
-class Persistent:
-    """Protocol that provides necessary information for persisting a message."""
-    @staticmethod
-    @abstractmethod
-    def table_name() -> str:
-        """
-        The name of the table where the data should be stored.
-        :return: str - table name
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def create_table_statement() -> str:
-        """
-        A valid sql statement for creating the table for storing this message type.
-        :return: str - create table sql statement
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def insert_statement() -> str:
-        """
-        A valid parameterized sql insert statement.  The parameters of the insert should match the
-        variable names of the message type.
-        :return: str - sql insert statement
-        """
-        pass
 
 
 @dataclass(order=True)
@@ -85,7 +56,7 @@ class Message:
     @property
     def device_datetime(self):
         if self.device_time:
-            return datetime.fromtimestamp(int(self.device_time)/1000)
+            return datetime.fromtimestamp(int(self.device_time) / 1000)
         return datetime.fromtimestamp(0)
 
     @property
@@ -120,13 +91,13 @@ class Message:
         if isinstance(message_type, MessageType):
             for message_type_specifier in message_type_specifiers:
                 if message_type.message_type == message_type_specifier.message_type \
-                   and message_type.message_version == message_type_specifier.message_version:
+                        and message_type.message_version == message_type_specifier.message_version:
                     return True
         elif isinstance(message_type, MessageTypeSpecifier):
             for message_type_specifier in message_type_specifiers:
                 _message_type: MessageTypeSpecifier = message_type
                 if _message_type.message_type == message_type_specifier.message_type \
-                       and message_type_specifier.message_version in message_type.version_specifier:
+                        and message_type_specifier.message_version in message_type.version_specifier:
                     return True
         return False
 
@@ -134,7 +105,8 @@ class Message:
     def create(data: dict, message_type: MessageType = None):
         if 'message_type' in data and 'message_version' in data and 'data' in data:
             # >= v0.2.0 structure
-            message_type = MessageType(message_type=data.get('message_type'), message_version=data.get('message_version'))
+            message_type = MessageType(message_type=data.get('message_type'),
+                                       message_version=data.get('message_version'))
             data = data.get('data')
 
         from .message_repository import MessageTypeRepository
