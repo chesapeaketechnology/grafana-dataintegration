@@ -4,7 +4,7 @@ from typing import List
 
 from lib.location import Location
 from lib.message import Message
-from lib.message_store import MessageStorageDelegate, StorageError
+from lib.storage import MessageStorageDelegate, StorageError
 import logging
 
 logger = logging.getLogger(__name__)

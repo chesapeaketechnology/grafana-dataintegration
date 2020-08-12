@@ -9,6 +9,23 @@ export ORG
 build:
 	docker build --no-cache -t ${ORG}/${PROJECT_NAME}:${TAG} .
 
+## run-local: Run the code locally
+run-local:
+	LOG_LEVEL="DEBUG" \
+	GDI_TOPIC="lte_message" \
+	GDI_MESSAGE_TYPE="LteRecord" \
+	GDI_MESSAGE_VERSION="~=0.1.0" \
+	GDI_KEY="udVOb6iPmBlEjFiFJYtyT7yy/U5Fd5WGWxWZK2nGfLM=" \
+	GDI_NAMESPACE="datasci-dev-mqtt-eventhubs-namespace.servicebus.usgovcloudapi.net" \
+	GDI_SHARED_ACCESS_POLICY="LTE_MESSAGE-auth-rule" \
+	GDI_DB_HOST="docker.for.mac.host.internal" \
+	GDI_DB_PORT="5432" \
+	GDI_DB_DATABASE="snet" \
+	GDI_DB_USER="postgres" \
+	GDI_DB_PASSWORD="MonkeyDance" \
+	GDI_DB_SCHEMA="public" \
+	python ./main.py
+
 ## run : Run the docker image locally
 run:
 	 docker run -d --name ${PROJECT_NAME} -e LOG_LEVEL="DEBUG" -e GDI_TOPIC="lte_message" -e GDI_MESSAGE_TYPE="LteRecord" -e GDI_MESSAGE_VERSION="~=0.1.0" -e GDI_KEY="udVOb6iPmBlEjFiFJYtyT7yy/U5Fd5WGWxWZK2nGfLM=" -e GDI_NAMESPACE="datasci-dev-mqtt-eventhubs-namespace.servicebus.usgovcloudapi.net" -e GDI_SHARED_ACCESS_POLICY="LTE_MESSAGE-auth-rule" -e GDI_DB_HOST="docker.for.mac.host.internal" -e GDI_DB_PORT="5432" -e GDI_DB_DATABASE="snet" -e GDI_DB_USER="postgres" -e GDI_DB_PASSWORD="MonkeyDance" -e GDI_DB_SCHEMA="public" ${ORG}/${PROJECT_NAME}:${TAG}
@@ -22,4 +39,4 @@ push:
 help : Makefile
 	@sed -n 's/^##//p' $<
 
-.PHONY: help build run push
+.PHONY: help build run push run-local

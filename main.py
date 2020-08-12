@@ -1,16 +1,10 @@
 import asyncio
 from pprint import pformat
-from typing import Type
-
 from azure.eventhub.aio import EventHubConsumerClient, EventHubSharedKeyCredential
 from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
-
 from lib.config import ConsumerConfig, Configuration
-from lib.message_store import PostgresMessageStorageDelegate, MessageStorageDelegate
+from lib.storage import PostgresMessageStorageDelegate, MessageStorageDelegate
 from lib.handler import MessageHandler
-from lib.messages.message import PersistentMessage
-from lib.messages.message_repository import MessageTypeRepository
-from lib.messages.storage import StorageDelegate, PostgresStorageDelegate
 import os
 import logging
 
@@ -71,8 +65,6 @@ async def consume(config: ConsumerConfig, delegate: MessageStorageDelegate):
             credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key)
         )
 
-    # message_type = message_class.latest_supported()
-    # handler = MessageHandler(message_type=message_type, storage_delegate=delegate, buffer_size=config.buffer_size)
     handler = MessageHandler(storage_delegate=delegate, buffer_size=config.buffer_size)
 
     async with client:
@@ -88,15 +80,4 @@ if __name__ == '__main__':
     storage_delegate = PostgresMessageStorageDelegate(config=configuration.database)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(consume(config=configuration.consumer, delegate=storage_delegate))
-    # # message_type_specifier = configuration.consumer.message_type_specifier
-    # # message_class = MessageTypeRepository.find_message_type(message_type_specifier)
-    # if message_class:
-    #     storage_delegate = PostgresStorageDelegate(config=configuration.database, message_class=message_class)
-    #     loop = asyncio.get_event_loop()
-    #     loop.run_until_complete(consume(config=configuration.consumer,
-    #                                     delegate=storage_delegate,
-    #                                     message_class=message_class))
-    #
-    # else:
-    #     raise ValueError("Unable to find configured message type.")
 
