@@ -53,6 +53,7 @@ resource "azurerm_network_profile" "gfi_net_profile" {
 
 # Create a Container Group
 resource "azurerm_container_group" "gfi_container_group" {
+  depends_on          = [var.eventhub_keys, var.eventhub_shared_access_policies, var.eventhub_namespace]
   name                = join("-", [var.system_name, var.environment, "grafana-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
