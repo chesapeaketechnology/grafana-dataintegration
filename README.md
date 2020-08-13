@@ -5,9 +5,17 @@ pipeline.
 This is intended run as a docker container where one container listens 
 to one topic. 
 
-## Required Environment Variables
-In order to run the 
+## Configuration
+Per the [12 Factors](https://12factor.net/config) the configuration should be
+in the environment.  
 
+As a convenience for local execution, you may leverage the settings.yaml and .secrets.yaml
+for providing configuration.  The values in these files will be used as defaults. Any
+production (or docker) deployment should overrride these values using environment 
+variables.
+
+#### Environment Variables
+##### Required
 * GDI_TOPIC - EventHub topic name
 * GDI_KEY - the EventHub access key
 * GDI_NAMESPACE - the fully qualified namespace for the EventHub namespace
@@ -21,10 +29,10 @@ In order to run the
 * GDI_CHECKPOINT_STORE_CONNECTION - The connection string for azure blob storage in which to store checkpoints.
 * GDI_CHECKPOINT_STORE_CONTAINER - The azure blob storage container name in which to store checkpoints.
 
-### Optional Environment Variables
+##### Optional
 * GDI_CONSUMER_GROUP - The EventHub consumer group. Defaults to '$default'.
 * GDI_BUFFER_SIZE - The number of messages to receive before writing to the database. Defaults to 1.
-* LOG_LEVEL - Can be 
+* LOG_LEVEL - Can be NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL. Defaults to ERROR. 
 
 
 ## Local Execution
@@ -42,6 +50,11 @@ If you intend to run the project locally, you will need to have:
 ### Run
 To run it you can use the Makefile.  You will need to edit the environment variables for the run-local target.
 ```make run-local```
+
+You could also simply run:
+```python main.py```
+
+*Be sure your are in your python virtualenv so that your libraries are on the path.*
 
 ## Docker Build & Execution
 You will need to have docker and docker compose installed locally. See https://docs.docker.com/get-docker/ for more information.
@@ -63,9 +76,18 @@ Once you are logged in via docker's cli tools you can run:
 ```make push```
 
 ## Changelog
+
+##### [0.2.0]() - 2020-08-12
+* Migrated to using a generic storage schema based on Postgres JSONB support
+* Removed database migrations as they are no longer needed with the generic schema
+* Removed message versioning as it is not longer needed with the generic schema
+* Moved to using dynaconf for a layered configuration.
  
 ##### [0.1.0]() - 2020-08-12
- * Migrated to using a generic storage schema based on Postgres JSONB support
+* Initial build of integration code based on message type
+* Added support for database migrations
+* Added support for LteRecord Message type
+* Added support for Message versioning
 
 ## Contact
 * **Les Stroud** - [lstroud](https://github.com/lstroud)  

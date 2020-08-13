@@ -1,0 +1,13 @@
+TOPIC: "lte_message"
+CONSUMER_GROUP: "frontend"
+NAMESPACE: "datasci-dev-mqtt-eventhubs-namespace.servicebus.usgovcloudapi.net"
+SHARED_ACCESS_POLICY: "lte_message-auth-rule"
+BUFFER_SIZE: 1
+LOG_LEVEL: "INFO"
+DB_HOST: "localhost"
+#DB_HOST: "docker.for.mac.host.internal"
+DB_PORT: "5432"
+DB_USER: "postgres"
+DB_DATABASE: "grafana"
+DB_SCHEMA: "public"
+

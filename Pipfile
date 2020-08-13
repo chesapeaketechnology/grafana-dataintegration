@@ -12,6 +12,7 @@ pyyaml = "*"
 packaging = "*"
 psycopg2-binary = "*"
 python-dateutil = "*"
+dynaconf = "*"
 
 [requires]
 python_version = "3.8"

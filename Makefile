@@ -11,19 +11,6 @@ build:
 
 ## run-local: Run the code locally
 run-local:
-	LOG_LEVEL="DEBUG" \
-	GDI_TOPIC="lte_message" \
-	GDI_MESSAGE_TYPE="LteRecord" \
-	GDI_MESSAGE_VERSION="~=0.1.0" \
-	GDI_KEY="udVOb6iPmBlEjFiFJYtyT7yy/U5Fd5WGWxWZK2nGfLM=" \
-	GDI_NAMESPACE="datasci-dev-mqtt-eventhubs-namespace.servicebus.usgovcloudapi.net" \
-	GDI_SHARED_ACCESS_POLICY="LTE_MESSAGE-auth-rule" \
-	GDI_DB_HOST="docker.for.mac.host.internal" \
-	GDI_DB_PORT="5432" \
-	GDI_DB_DATABASE="snet" \
-	GDI_DB_USER="postgres" \
-	GDI_DB_PASSWORD="MonkeyDance" \
-	GDI_DB_SCHEMA="public" \
 	python ./main.py
 
 ## run : Run the docker image locally

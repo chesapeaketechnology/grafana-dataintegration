@@ -5,11 +5,9 @@ from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 from lib.config import ConsumerConfig, Configuration
 from lib.storage import PostgresMessageStorageDelegate, MessageStorageDelegate
 from lib.handler import MessageHandler
-import os
 import logging
 
-log_level = logging.getLevelName(os.getenv('LOG_LEVEL', 'ERROR'))
-logging.basicConfig(level=log_level)
+logging.basicConfig(level=Configuration.log_level())
 logger = logging.getLogger(__name__)
 
 
