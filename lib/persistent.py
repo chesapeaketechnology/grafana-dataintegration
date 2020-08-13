@@ -17,6 +17,7 @@ class Persistent:
     def create_table_statements() -> [str]:
         """
         A valid sql statement for creating the table for storing this message type.
+
         :return: str - create table sql statement
         """
         pass
@@ -27,6 +28,7 @@ class Persistent:
         """
         A valid parameterized sql insert statement.  The parameters of the insert should match the
         variable names of the message type.
+
         :return: str - sql insert statement
         """
         pass

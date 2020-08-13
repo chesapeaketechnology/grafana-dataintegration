@@ -13,6 +13,9 @@ settings = Dynaconf(
 
 @dataclass
 class ConsumerConfig:
+    """
+    Structure for housing configuration parameters related to the EventHub topic consumer
+    """
     topic: str
     key: str
     fully_qualified_namespace: str
@@ -25,6 +28,9 @@ class ConsumerConfig:
 
 @dataclass
 class DatabaseConfig:
+    """
+    Structure for housing the configuration related to the grafana database
+    """
     host: str
     port: int
     database: str
@@ -35,19 +41,30 @@ class DatabaseConfig:
 
 @dataclass
 class Configuration:
+    """
+    Provides functionality from retrieving configuration parameters from settings files and the environment.
+
+    For more information on the configuration library, please refer to `DynaConf <https://www.dynaconf.com>`_.
+    """
     consumer: ConsumerConfig
     database: DatabaseConfig
 
     @staticmethod
     def get_settings():
+        """Access to the underlying settings structure"""
         return settings
 
     @staticmethod
     def log_level():
+        """Get the configured log level"""
         return logging.getLevelName(settings.get('LOG_LEVEL', 'ERROR'))
 
     @staticmethod
     def get_config():
+        """
+        Get the configuration information
+        :return: a :class:`lib.config.Configuration` object
+        """
         return Configuration(
             consumer=ConsumerConfig(
                 topic=settings.get('TOPIC'),

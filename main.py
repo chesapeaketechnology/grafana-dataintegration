@@ -12,22 +12,43 @@ logger = logging.getLogger(__name__)
 
 
 async def errored(partition_context, error):
-    # Put your code here. partition_context can be None in the on_error callback.
+    """
+    The callback function that will be called when an error is raised during receiving after retry
+    attempts are exhausted, or during the process of load-balancing.
+
+    :param azure.eventhub.PartitionContext partition_context: The EventHub partition context.
+    :param error: the exception
+    :return: None
+    """
     if partition_context:
         logger.error("An exception: {} occurred during receiving from Partition: {}.".format(
-            partition_context.partition_id,
-            error
+            partition_context.partition_id if partition_context else None, error
         ))
     else:
         logger.error("An exception: {} occurred during the load balance process.".format(error))
 
 
 async def partition_initialized(partition_context):
-    # Put your code here.
+    """
+    The callback function that will be called after a consumer for a certain partition finishes
+    initialization. It would also be called when a new internal partition consumer is created to
+    take over the receiving process for a failed and closed internal partition consumer.
+
+    :param azure.eventhub.PartitionContext partition_context: The EventHub partition context.
+    :return: None
+    """
     logger.info("Partition: {} has been initialized.".format(partition_context.partition_id))
 
 
 async def partition_closed(partition_context, reason):
+    """
+    The callback function that will be called after a consumer for a certain partition is closed. It would
+    be also called when error is raised during receiving after retry attempts are exhausted.
+
+    :param azure.eventhub.PartitionContext partition_context: The EventHub partition context.
+    :param reason: for the close
+    :return: None
+    """
     # Put your code here.
     logger.info("Partition: {} has been closed, reason for closing: {}.".format(
         partition_context.partition_id,

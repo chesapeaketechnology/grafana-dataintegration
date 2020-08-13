@@ -34,6 +34,15 @@ class Message(Persistent):
         self.id = self.generate_id()
 
     def convert_to_timestamp(self, device_time):
+        """
+        Converts the provided device_time from an integer string,
+        an iso8601 string, or an int to a datetime timestamp.
+        If an epoch time is provided as an integer, it will move
+        precision below seconds to the right side of the decimal.
+
+        :param device_time: epoch or iso8601 representation
+        :return: datetime
+        """
         if device_time is None:
             return None
         if isinstance(device_time, str):
@@ -50,7 +59,12 @@ class Message(Persistent):
         else:
             raise ValueError(f"Unable to convert device_time [{device_time}] to timestamp")
 
-    def generate_id(self):
+    def generate_id(self) -> str:
+        """
+        Generate a unique sha256 hash representing the fields of the message.
+
+        :return: str signature
+        """
         d = vars(self)
         hash_string = ''.join([str(d[x]) for x in sorted(d.keys())])
         sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
@@ -62,6 +76,11 @@ class Message(Persistent):
 
     @staticmethod
     def create_table_statements() -> [str]:
+        """
+        A series of sql statements for settings up database artifacts necessary to store and query the messages.
+
+        :return: a list of sql statements
+        """
         return [
             "CREATE EXTENSION IF NOT EXISTS postgis;",
             """
@@ -89,6 +108,7 @@ class Message(Persistent):
 
     @staticmethod
     def insert_statement() -> str:
+        """Parameterized sql for inserting a message into the database."""
         return """INSERT INTO public.message  
                   VALUES (
                     %(id)s, 

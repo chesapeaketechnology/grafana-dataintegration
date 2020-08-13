@@ -35,6 +35,12 @@ class MessageStorageDelegate:
     """
     @abstractmethod
     def save(self, messages: List[Persistent]):
+        """
+        Save a :class:List of :class:Persistent objects to the database.
+
+        :param List[Persistent] messages: The messages to save.
+        :return: None
+        """
         pass
 
 
@@ -83,7 +89,8 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
     def save(self, messages: List[Message]):
         """
         Save the messages to the data store. The messages must all be of the same message type.
-        :param messages: a list of message objects that implement the Message and Persistent classes
+
+        :param List[Message] messages: a list of Message objects
         :return: None
         """
         if messages:

@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 
 class MessageHandler:
     """
-    Handle the receipt of a new message.  Identity the type of the message and instantiate the appropriate
-    Message type. Provides for buffering N messages before storing to the storage subsystem and coordinates
-    storage of the message.
+    Handles the receipt of a new message. Provides for buffering N messages before
+    storing to the storage subsystem and coordinates storage of the message.
     """
     def __init__(self, storage_delegate: MessageStorageDelegate, buffer_size: int = 1) -> None:
         super().__init__()
@@ -23,6 +22,18 @@ class MessageHandler:
         self.buffer: List[Message] = []
 
     async def received_event(self, partition_context, event):
+        """
+        The callback function for handling a received event. The callback takes
+        two parameters: partition_context which contains partition context and
+        event which is the received event.
+
+        For detailed partition context information, please refer to `PartitionContext <https://docs.microsoft.com/en-us/python/api/azure-eventhub/azure.eventhub.partitioncontext?view=azure-python>`_.
+        For detailed event information, please refer to `EventData <https://docs.microsoft.com/en-us/python/api/azure-eventhub/azure.eventhub.eventdata?view=azure-python>`_.
+
+        :param azure.eventhub.PartitionContext partition_context: The EventHub partition context. See
+        :param Optional[azure.eventhub.EventData] event: The event data
+        :return: None
+        """
         try:
             logger.debug(f"Received the event: '{event.body_as_str(encoding='UTF-8') if event else 'None'}'"
                          f" from the partition with ID: '{partition_context.partition_id}'")
@@ -47,8 +58,6 @@ class MessageHandler:
                     logger.fatal(se)
                 self.buffer.clear()
 
-            # Update the checkpoint so that the program doesn't read the events
-            # that it has already read when you run it next time.
             await partition_context.update_checkpoint(event)
         except Exception as e:
             logger.exception(e)
