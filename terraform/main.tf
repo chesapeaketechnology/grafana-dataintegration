@@ -58,6 +58,7 @@ resource "azurerm_container_group" "gfi_container_group" {
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
   ip_address_type     = "public"
+
   dns_name_label      = "grafana-integration"
   os_type             = "Linux"
 
@@ -71,6 +72,11 @@ resource "azurerm_container_group" "gfi_container_group" {
       image = "chesapeaketechnology/grafana-dataintegration:0.1.0"
       cpu = "0.5"
       memory = "0.5"
+
+      ports {
+        port     = 3000
+        protocol = "TCP"
+      }
 
       environment_variables = {
         GDI_TOPIC = container.value,
