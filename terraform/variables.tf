@@ -28,11 +28,6 @@ variable "default_tags" {
   description = "Collection of default tags to apply to all resources"
 }
 
-variable "subnet_cidrs" {
-  type        = list(string)
-  description = "The subnet CIDRs the Grafana server should live within."
-}
-
 variable "network_profile_id" {
   type        = string
   description = "Name of the network profile in which to create the container"
