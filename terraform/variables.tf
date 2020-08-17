@@ -33,6 +33,11 @@ variable "subnet_cidrs" {
   description = "The subnet CIDRs the Grafana server should live within."
 }
 
+variable "network_profile_id" {
+  type        = string
+  description = "Name of the network profile in which to create the container"
+}
+
 variable "db_host" {
   type        = string
   description = "The database fully qualified host name"

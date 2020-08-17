@@ -13,43 +13,43 @@ data "azurerm_resource_group" "gfi_resource_group" {
   name = var.resource_group_name
 }
 
+//
+//data "azurerm_virtual_network" "gfi_net" {
+//  name                = var.virtual_network_name
+//  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
+//}
 
-data "azurerm_virtual_network" "gfi_net" {
-  name                = var.virtual_network_name
-  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
-}
+//# Create subnet for use with containers
+//resource "azurerm_subnet" "gfi_subnet" {
+//  name                 = "gfi_integration_subnet"
+//  resource_group_name  = data.azurerm_resource_group.gfi_resource_group.name
+//  virtual_network_name = data.azurerm_virtual_network.gfi_net.name
+//  address_prefixes     = var.subnet_cidrs
+//
+//  delegation {
+//    name = "gfi_integration_subnet_delegation"
+//
+//    service_delegation {
+//      name = "Microsoft.ContainerInstance/containerGroups"
+//      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+//    }
+//  }
+//}
 
-# Create subnet for use with containers
-resource "azurerm_subnet" "gfi_subnet" {
-  name                 = "gfi_integration_subnet"
-  resource_group_name  = data.azurerm_resource_group.gfi_resource_group.name
-  virtual_network_name = data.azurerm_virtual_network.gfi_net.name
-  address_prefixes     = var.subnet_cidrs
-
-  delegation {
-    name = "gfi_integration_subnet_delegation"
-
-    service_delegation {
-      name = "Microsoft.ContainerInstance/containerGroups"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
-  }
-}
-
-resource "azurerm_network_profile" "gfi_net_profile" {
-  name                = join("-", [var.system_name, var.environment, "gfi-net-profile"])
-  location            = data.azurerm_resource_group.gfi_resource_group.location
-  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
-
-  container_network_interface {
-    name = "container_nic"
-
-    ip_configuration {
-      name = "container_ip_config"
-      subnet_id = azurerm_subnet.gfi_subnet.id
-    }
-  }
-}
+//resource "azurerm_network_profile" "gfi_net_profile" {
+//  name                = join("-", [var.system_name, var.environment, "gfi-net-profile"])
+//  location            = data.azurerm_resource_group.gfi_resource_group.location
+//  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
+//
+//  container_network_interface {
+//    name = "container_nic"
+//
+//    ip_configuration {
+//      name = "container_ip_config"
+//      subnet_id = azurerm_subnet.gfi_subnet.id
+//    }
+//  }
+//}
 
 # Create a Container Group
 resource "azurerm_container_group" "gfi_container_group" {
@@ -57,9 +57,8 @@ resource "azurerm_container_group" "gfi_container_group" {
   name                = join("-", [var.system_name, var.environment, "grafana-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
-  ip_address_type     = "public"
-
-  dns_name_label      = "grafana-integration"
+  ip_address_type     = "private"
+  network_profile_id  = var.network_profile_id
   os_type             = "Linux"
 
   tags = var.default_tags
