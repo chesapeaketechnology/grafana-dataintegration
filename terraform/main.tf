@@ -90,7 +90,7 @@ resource "azurerm_container_group" "gfi_container_group" {
         GDI_DB_PASSWORD = var.db_password,
         GDI_DB_SCHEMA = var.db_schema,
         GDI_BUFFER_SIZE = 1,
-        LOG_LEVEL = "DEBUG",
+        GDI_LOG_LEVEL = "DEBUG",
 
         //      GDI_CHECKPOINT_STORE_CONNECTION=var.
         //      GDI_CHECKPOINT_STORE_CONTAINER=var.
