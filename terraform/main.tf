@@ -52,7 +52,7 @@ data "azurerm_resource_group" "gfi_resource_group" {
 //}
 
 resource "azurerm_storage_account" "gfi_storage_account" {
-  name                     = join("-", ["sa", var.system_name, var.environment, "gfi"])
+  name                     = join("", ["sa", var.system_name, var.environment, "gfi"])
   resource_group_name      = data.azurerm_resource_group.gfi_resource_group.name
   location                 = data.azurerm_resource_group.gfi_resource_group.location
   account_tier             = "Standard"
