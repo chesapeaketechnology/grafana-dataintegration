@@ -91,8 +91,8 @@ resource "azurerm_container_group" "gfi_container_group" {
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
       image = "chesapeaketechnology/grafana-dataintegration:0.2.1"
-      cpu = "0.5"
-      memory = "0.5"
+      cpu = "1"
+      memory = "2"
 
       ports {
         port     = 3000
