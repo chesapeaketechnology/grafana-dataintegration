@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 
 from dateutil import parser
+from dateutil.tz import UTC
 
 from lib.location import Location
 from lib.persistent import Persistent
@@ -51,11 +52,11 @@ class Message(Persistent):
             else:
                 return parser.parse(device_time)
         if isinstance(device_time, (int, float, decimal.Decimal)):
-            now = datetime.now().timestamp()
+            now = datetime.utcnow().timestamp()
             dt = device_time
             while dt > now:
-                dt = device_time / 1000.0
-            return datetime.fromtimestamp(dt)
+                dt = dt / 1000.0
+            return datetime.utcfromtimestamp(dt)
         else:
             raise ValueError(f"Unable to convert device_time [{device_time}] to timestamp")
 

@@ -1,5 +1,6 @@
 import logging
 from abc import abstractmethod
+from pprint import pformat
 from typing import List
 
 import psycopg2
@@ -96,19 +97,23 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
         if messages:
             statement = Message.insert_statement()
             try:
-                self.connection.autocommit = True
-                with self.connection.cursor() as cursor:
+                with self.connection as conn:
+                    with conn.cursor() as cursor:
 
-                    all_messages = [{
-                        **vars(message)
-                    } for message in messages]
+                        all_messages = [{
+                            **vars(message)
+                        } for message in messages]
 
-                    try:
-                        execute_batch(cursor, statement, all_messages)
-                    except Exception as e:
-                        logger.warning("Unable to insert row, checking to ensure table exists.")
-                        if not self.table_exists():
-                            self.create_table()
+                        try:
+                            logger.info(f"Inserting {len(all_messages)} messages. "
+                                        f"(from: {all_messages[0]['device_timestamp'].isoformat()} "
+                                        f"to: {all_messages[-1]['device_timestamp'].isoformat()})")
+                            logger.debug(pformat(all_messages))
                             execute_batch(cursor, statement, all_messages)
+                        except Exception as e:
+                            logger.warning("Unable to insert row, checking to ensure table exists.")
+                            if not self.table_exists():
+                                self.create_table()
+                                execute_batch(cursor, statement, all_messages)
             except Exception as e:
                 raise StorageError(f"Unable to store messages [{messages}]") from e

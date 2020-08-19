@@ -1,6 +1,6 @@
 PROJECT_NAME="grafana-dataintegration"
 export PROJECT_NAME
-TAG="0.2.0"
+TAG="0.2.1"
 export TAG
 ORG="chesapeaketechnology"
 export ORG

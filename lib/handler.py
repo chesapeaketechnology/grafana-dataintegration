@@ -15,11 +15,14 @@ class MessageHandler:
     Handles the receipt of a new message. Provides for buffering N messages before
     storing to the storage subsystem and coordinates storage of the message.
     """
-    def __init__(self, storage_delegate: MessageStorageDelegate, buffer_size: int = 1) -> None:
+    def __init__(self, storage_delegate: MessageStorageDelegate,
+                 buffer_size: int = 1, max_buffer_time_in_sec: int = 20) -> None:
         super().__init__()
         self.storage_delegate = storage_delegate
         self.buffer_size = buffer_size
+        self.max_buffer_time_in_sec = max_buffer_time_in_sec
         self.buffer: List[Message] = []
+        self.last_buffer_flush = datetime.utcnow()
 
     async def received_event(self, partition_context, event):
         """
@@ -51,13 +54,19 @@ class MessageHandler:
                     data=_data
                 )
                 self.buffer.append(message)
-            if len(self.buffer) > self.buffer_size:
-                try:
-                    self.storage_delegate.save(self.buffer)
-                except StorageError as se:
-                    logger.fatal(se)
-                self.buffer.clear()
+
+            delta = datetime.utcnow() - self.last_buffer_flush
+            if len(self.buffer) >= self.buffer_size or delta.total_seconds() > self.max_buffer_time_in_sec:
+                self.flush_buffer()
 
             await partition_context.update_checkpoint(event)
         except Exception as e:
             logger.exception(e)
+
+    def flush_buffer(self):
+        try:
+            self.storage_delegate.save(self.buffer)
+        except StorageError as se:
+            logger.fatal(se)
+        self.buffer.clear()
+        self.last_buffer_flush = datetime.utcnow()

@@ -22,6 +22,7 @@ class ConsumerConfig:
     shared_access_policy: str
     consumer_group: str = '$default'
     buffer_size: int = 1
+    max_buffer_time_in_seconds: int = 20
     checkpoint_store_conn_str: str = None
     checkpoint_store_container_name: str = None
 
@@ -73,6 +74,7 @@ class Configuration:
                 shared_access_policy=settings.get('SHARED_ACCESS_POLICY'),
                 consumer_group=settings.get('CONSUMER_GROUP', '$default'),
                 buffer_size=int(settings.get('BUFFER_SIZE', 1)),
+                max_buffer_time_in_seconds=int(settings.get('MAX_BUFFER_TIME_IN_SEC', 20)),
                 checkpoint_store_conn_str=settings.get('CHECKPOINT_STORE_CONNECTION'),
                 checkpoint_store_container_name=settings.get('CHECKPOINT_STORE_CONTAINER')
 

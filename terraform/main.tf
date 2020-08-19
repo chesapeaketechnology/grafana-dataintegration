@@ -51,6 +51,28 @@ data "azurerm_resource_group" "gfi_resource_group" {
 //  }
 //}
 
+resource "azurerm_storage_account" "gfi_storage_account" {
+  name                     = join("-", ["sa", var.system_name, var.environment, "gfi"])
+  resource_group_name      = data.azurerm_resource_group.gfi_resource_group.name
+  location                 = data.azurerm_resource_group.gfi_resource_group.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_storage_container" "gfi_storage_container" {
+  name                  = join("-", ["sc", var.system_name, var.environment, "gfi-checkpoint"])
+  storage_account_name  = azurerm_storage_account.gfi_storage_account.name
+  container_access_type = "private"
+}
+
+//resource "azurerm_storage_blob" "example" {
+//  name                   = "my-awesome-content.zip"
+//  storage_account_name   = azurerm_storage_account.example.name
+//  storage_container_name = azurerm_storage_container.example.name
+//  type                   = "Block"
+//  source                 = "some-local-file.zip"
+//}
+
 # Create a Container Group
 resource "azurerm_container_group" "gfi_container_group" {
   depends_on          = [var.eventhub_keys, var.eventhub_shared_access_policies, var.eventhub_namespace]
@@ -68,7 +90,7 @@ resource "azurerm_container_group" "gfi_container_group" {
     for_each = var.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
-      image = "chesapeaketechnology/grafana-dataintegration:0.1.0"
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.1"
       cpu = "0.5"
       memory = "0.5"
 
@@ -89,11 +111,10 @@ resource "azurerm_container_group" "gfi_container_group" {
         GDI_DB_USER = var.db_user,
         GDI_DB_PASSWORD = var.db_password,
         GDI_DB_SCHEMA = var.db_schema,
-        GDI_BUFFER_SIZE = 1,
-        GDI_LOG_LEVEL = "DEBUG",
-
-        //      GDI_CHECKPOINT_STORE_CONNECTION=var.
-        //      GDI_CHECKPOINT_STORE_CONTAINER=var.
+        GDI_BUFFER_SIZE = 20,
+        GDI_LOG_LEVEL = "INFO",
+        GDI_CHECKPOINT_STORE_CONNECTION=azurerm_storage_account.gfi_storage_account.primary_blob_connection_string
+        GDI_CHECKPOINT_STORE_CONTAINER=azurerm_storage_container.gfi_storage_container.name
       }
     }
   }

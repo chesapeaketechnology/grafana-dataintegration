@@ -7,7 +7,11 @@ from lib.storage import PostgresMessageStorageDelegate, MessageStorageDelegate
 from lib.handler import MessageHandler
 import logging
 
-logging.basicConfig(level=Configuration.log_level())
+logging.basicConfig(
+    format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d:%H:%M:%S',
+    level=Configuration.log_level(),
+)
 logger = logging.getLogger(__name__)
 
 
