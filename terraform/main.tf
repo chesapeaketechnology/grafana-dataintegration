@@ -90,7 +90,7 @@ resource "azurerm_container_group" "gfi_container_group" {
     for_each = var.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
-      image = "chesapeaketechnology/grafana-dataintegration:0.2.1"
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.2"
       cpu = "1"
       memory = "2"
 

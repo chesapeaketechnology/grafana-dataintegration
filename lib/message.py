@@ -1,7 +1,7 @@
 import decimal
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.tz import UTC
@@ -54,7 +54,7 @@ class Message(Persistent):
         if isinstance(device_time, (int, float, decimal.Decimal)):
             now = datetime.utcnow().timestamp()
             dt = device_time
-            while dt > now:
+            while dt > (now * 100.0):
                 dt = dt / 1000.0
             return datetime.utcfromtimestamp(dt)
         else:
