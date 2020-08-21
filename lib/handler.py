@@ -64,8 +64,8 @@ class MessageHandler:
             buffer_delta = datetime.now(timezone.utc) - self.last_buffer_flush
             if len(self.buffer) >= self.buffer_size or buffer_delta.total_seconds() > self.max_buffer_time_in_sec:
                 self.flush_buffer()
-
-            await partition_context.update_checkpoint(event)
+                await partition_context.update_checkpoint(event)
+                logger.info("Checkpoint Updated.")
 
             evict_delta = datetime.now(timezone.utc) - self.last_eviction_time
             if evict_delta.total_seconds() > self.data_eviction_interval_in_seconds:

@@ -88,7 +88,13 @@ async def consume(config: ConsumerConfig, delegate: MessageStorageDelegate):
             credential=EventHubSharedKeyCredential(config.shared_access_policy, config.key)
         )
 
-    handler = MessageHandler(storage_delegate=delegate, buffer_size=config.buffer_size)
+    handler = MessageHandler(
+        storage_delegate=delegate,
+        buffer_size=config.buffer_size,
+        max_buffer_time_in_sec=config.max_buffer_time_in_seconds,
+        max_time_to_keep_data_in_seconds=config.max_time_to_keep_data_in_seconds,
+        data_eviction_interval_in_seconds=config.data_eviction_interval_in_seconds
+    )
 
     async with client:
         await client.receive(on_event=handler.received_event,

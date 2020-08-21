@@ -13,65 +13,19 @@ data "azurerm_resource_group" "gfi_resource_group" {
   name = var.resource_group_name
 }
 
-//
-//data "azurerm_virtual_network" "gfi_net" {
-//  name                = var.virtual_network_name
-//  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
-//}
+resource "azurerm_storage_account" "gfi_storage_account" {
+  name                     = join("", ["sa", var.system_name, var.environment, "gfi"])
+  resource_group_name      = data.azurerm_resource_group.gfi_resource_group.name
+  location                 = data.azurerm_resource_group.gfi_resource_group.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
 
-//# Create subnet for use with containers
-//resource "azurerm_subnet" "gfi_subnet" {
-//  name                 = "gfi_integration_subnet"
-//  resource_group_name  = data.azurerm_resource_group.gfi_resource_group.name
-//  virtual_network_name = data.azurerm_virtual_network.gfi_net.name
-//  address_prefixes     = var.subnet_cidrs
-//
-//  delegation {
-//    name = "gfi_integration_subnet_delegation"
-//
-//    service_delegation {
-//      name = "Microsoft.ContainerInstance/containerGroups"
-//      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-//    }
-//  }
-//}
-
-//resource "azurerm_network_profile" "gfi_net_profile" {
-//  name                = join("-", [var.system_name, var.environment, "gfi-net-profile"])
-//  location            = data.azurerm_resource_group.gfi_resource_group.location
-//  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
-//
-//  container_network_interface {
-//    name = "container_nic"
-//
-//    ip_configuration {
-//      name = "container_ip_config"
-//      subnet_id = azurerm_subnet.gfi_subnet.id
-//    }
-//  }
-//}
-
-//resource "azurerm_storage_account" "gfi_storage_account" {
-//  name                     = join("", ["sa", var.system_name, var.environment, "gfi"])
-//  resource_group_name      = data.azurerm_resource_group.gfi_resource_group.name
-//  location                 = data.azurerm_resource_group.gfi_resource_group.location
-//  account_tier             = "Standard"
-//  account_replication_type = "LRS"
-//}
-//
-//resource "azurerm_storage_container" "gfi_storage_container" {
-//  name                  = join("-", ["sc", var.system_name, var.environment, "gfi-checkpoint"])
-//  storage_account_name  = azurerm_storage_account.gfi_storage_account.name
-//  container_access_type = "private"
-//}
-
-//resource "azurerm_storage_blob" "example" {
-//  name                   = "my-awesome-content.zip"
-//  storage_account_name   = azurerm_storage_account.example.name
-//  storage_container_name = azurerm_storage_container.example.name
-//  type                   = "Block"
-//  source                 = "some-local-file.zip"
-//}
+resource "azurerm_storage_container" "gfi_storage_container" {
+  name                  = join("-", ["sc", var.system_name, var.environment, "gfi-checkpoint"])
+  storage_account_name  = azurerm_storage_account.gfi_storage_account.name
+  container_access_type = "private"
+}
 
 # Create a Container Group
 resource "azurerm_container_group" "gfi_container_group" {
@@ -115,9 +69,9 @@ resource "azurerm_container_group" "gfi_container_group" {
         GDI_LOG_LEVEL = "INFO",
         GDI_MAX_BUFFER_TIME_IN_SEC = 20,
         GDI_MAX_TIME_TO_KEEP_DATA_IN_SEC = 604800,
-        GDI_DATA_EVICT_INTERVAL_IN_SEC = 7200
-//        GDI_CHECKPOINT_STORE_CONNECTION=azurerm_storage_account.gfi_storage_account.primary_blob_connection_string
-//        GDI_CHECKPOINT_STORE_CONTAINER=azurerm_storage_container.gfi_storage_container.name
+        GDI_DATA_EVICT_INTERVAL_IN_SEC = 7200,
+        GDI_CHECKPOINT_STORE_CONNECTION=azurerm_storage_account.gfi_storage_account.primary_blob_connection_string,
+        GDI_CHECKPOINT_STORE_CONTAINER=azurerm_storage_container.gfi_storage_container.name
       }
     }
   }
