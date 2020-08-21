@@ -88,3 +88,8 @@ variable "checkpoint_store_container" {
   description = "[Optional] The azure blob container to be used for eventhub checkpoint storage."
   default     = ""
 }
+
+variable "consul_server" {
+  type        = string
+  description = "IP address of a Consul server to join"
+}

@@ -45,7 +45,7 @@ resource "azurerm_container_group" "gfi_container_group" {
     image = "consul:1.8"
     cpu = "1"
     memory = "1"
-    commands=["consul", "agent", "-retry-join=${consul_server}"]
+    commands=["consul", "agent", "-retry-join=${var.consul_server}"]
 
     # Gossip protocol between agents and servers
     ports {
