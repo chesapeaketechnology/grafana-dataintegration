@@ -39,42 +39,42 @@ resource "azurerm_container_group" "gfi_container_group" {
 
   tags = var.default_tags
 
-  #Consul container for the group
-  container {
-    name = "gfi-consul"
-    image = "consul:1.8"
-    cpu = "1"
-    memory = "1"
-    commands=["consul", "agent", "-retry-join=${var.consul_server}"]
-
-    # Gossip protocol between agents and servers
-    ports {
-      port     = 8301
-      protocol = "TCP"
-    }
-
-    # RPC for CLI tools
-    ports {
-      port     = 8400
-      protocol = "TCP"
-    }
-
-    # HTTP API
-    ports {
-      port     = 8500
-      protocol = "TCP"
-    }
-
-    # DNS Interface
-    ports {
-      port     = 8600
-      protocol = "TCP"
-    }
-
-    environment_variables = {
-      CONSUL_LOCAL_CONFIG="{\"leave_on_terminate\": true}"
-    }
-  }
+//  #Consul container for the group
+//  container {
+//    name = "gfi-consul"
+//    image = "consul:1.8"
+//    cpu = "1"
+//    memory = "1"
+//    commands=["consul", "agent", "-retry-join=${var.consul_server}"]
+//
+//    # Gossip protocol between agents and servers
+//    ports {
+//      port     = 8301
+//      protocol = "TCP"
+//    }
+//
+//    # RPC for CLI tools
+//    ports {
+//      port     = 8400
+//      protocol = "TCP"
+//    }
+//
+//    # HTTP API
+//    ports {
+//      port     = 8500
+//      protocol = "TCP"
+//    }
+//
+//    # DNS Interface
+//    ports {
+//      port     = 8600
+//      protocol = "TCP"
+//    }
+//
+//    environment_variables = {
+//      CONSUL_LOCAL_CONFIG="{\"leave_on_terminate\": true}"
+//    }
+//  }
 
   # Grafana Server
   dynamic container {
