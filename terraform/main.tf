@@ -72,7 +72,7 @@ resource "azurerm_container_group" "gfi_container_group" {
     }
 
     environment_variables = {
-      CONSUL_LOCAL_CONFIG={"leave_on_terminate": true}
+      CONSUL_LOCAL_CONFIG="{\"leave_on_terminate\": true}"
     }
   }
 
