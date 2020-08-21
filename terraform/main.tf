@@ -113,9 +113,9 @@ resource "azurerm_container_group" "gfi_container_group" {
         GDI_DB_SCHEMA = var.db_schema,
         GDI_BUFFER_SIZE = 20,
         GDI_LOG_LEVEL = "INFO",
-        MAX_BUFFER_TIME_IN_SEC = 20,
-        MAX_TIME_TO_KEEP_DATA_IN_SEC = 604800,
-        DATA_EVICT_INTERVAL_IN_SEC = 7200
+        GDI_MAX_BUFFER_TIME_IN_SEC = 20,
+        GDI_MAX_TIME_TO_KEEP_DATA_IN_SEC = 604800,
+        GDI_DATA_EVICT_INTERVAL_IN_SEC = 7200
 //        GDI_CHECKPOINT_STORE_CONNECTION=azurerm_storage_account.gfi_storage_account.primary_blob_connection_string
 //        GDI_CHECKPOINT_STORE_CONTAINER=azurerm_storage_container.gfi_storage_container.name
       }
