@@ -80,6 +80,9 @@ Once you are logged in via docker's cli tools you can run:
 
 ## Changelog
 
+##### [0.2.4]() - 2020-08-20
+* Resolved issue with db connection contention 
+
 ##### [0.2.3]() - 2020-08-20
 * Added support for data eviction 
 

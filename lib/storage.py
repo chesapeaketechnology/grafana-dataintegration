@@ -65,13 +65,16 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
         self.config = config
         self._connection = None
 
+    def connected(self):
+        return self._connection and self._connection.closed == 0
+
     @property
     def connection(self):
         """
         Return the database connection. Will create the connection if it doesn't exist.
         :return: db_api connection object
         """
-        if self._connection is None:
+        if not self.connected():
             self._connection = psycopg2.connect(
                 host=self.config.host,
                 port=self.config.port,
@@ -79,23 +82,23 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
                 user=self.config.user,
                 password=self.config.password
             )
-        self._connection.autocommit = True
         return self._connection
 
     def table_exists(self):
         """Determine if the table exists in the configured database."""
-        with self.connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM information_schema.tables "
-                           "WHERE table_schema = 'public' "
-                           "AND table_name = %(table_name)s", {'table_name': Message.table_name()})
-            return cursor.rowcount > 0
+        with self.connection as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM information_schema.tables "
+                               "WHERE table_schema = 'public' "
+                               "AND table_name = %(table_name)s", {'table_name': Message.table_name()})
+                return cursor.rowcount > 0
 
     def create_table(self):
         """Create the table in the database."""
-        with self.connection.cursor() as cursor:
-            self.connection.autocommit = True
-            for statement in Message.create_table_statements():
-                cursor.execute(statement)
+        with self.connection as conn:
+            with conn.cursor() as cursor:
+                for statement in Message.create_table_statements():
+                    cursor.execute(statement)
 
     def evict(self, older_than: datetime):
         statement = Message.delete_statement()
@@ -104,7 +107,7 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
                 with conn.cursor() as cursor:
                     cursor.execute(statement, {'device_timestamp': older_than})
         except Exception as e:
-            raise StorageError(f"Unable to store delete messages prior to [{older_than}]") from e
+            raise StorageError(f"Unable to delete messages prior to [{older_than}]") from e
 
     def save(self, messages: List[Message]):
         """
