@@ -106,8 +106,8 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
             with self.connection as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(statement, {'device_timestamp': older_than})
-        except Exception as e:
-            raise StorageError(f"Unable to delete messages prior to [{older_than}]") from e
+        except Exception:
+            logger.exception(f"Unable to delete messages prior to [{older_than}]")
 
     def save(self, messages: List[Message]):
         """
