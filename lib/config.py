@@ -1,6 +1,8 @@
 import logging
 from dataclasses import dataclass
 import os
+from datetime import timedelta
+
 from dynaconf import Dynaconf
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
@@ -23,6 +25,8 @@ class ConsumerConfig:
     consumer_group: str = '$default'
     buffer_size: int = 1
     max_buffer_time_in_seconds: int = 20
+    max_time_to_keep_data_in_seconds: int = timedelta(days=7).total_seconds()
+    data_eviction_interval_in_seconds: int = timedelta(hours=2).total_seconds()
     checkpoint_store_conn_str: str = None
     checkpoint_store_container_name: str = None
 
@@ -75,6 +79,10 @@ class Configuration:
                 consumer_group=settings.get('CONSUMER_GROUP', '$default'),
                 buffer_size=int(settings.get('BUFFER_SIZE', 1)),
                 max_buffer_time_in_seconds=int(settings.get('MAX_BUFFER_TIME_IN_SEC', 20)),
+                max_time_to_keep_data_in_seconds=int(settings.get('MAX_TIME_TO_KEEP_DATA_IN_SEC',
+                                                                  timedelta(days=7).total_seconds())),
+                data_eviction_interval_in_seconds=int(settings.get('DATA_EVICT_INTERVAL_IN_SEC',
+                                                                   timedelta(hours=2).total_seconds())),
                 checkpoint_store_conn_str=settings.get('CHECKPOINT_STORE_CONNECTION'),
                 checkpoint_store_container_name=settings.get('CHECKPOINT_STORE_CONTAINER')
 

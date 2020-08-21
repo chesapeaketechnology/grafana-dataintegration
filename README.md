@@ -33,6 +33,9 @@ variables.
 * GDI_CONSUMER_GROUP - The EventHub consumer group. Defaults to '$default'.
 * GDI_BUFFER_SIZE - The number of messages to receive before writing to the database. Defaults to 1.
 * LOG_LEVEL - Can be NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL. Defaults to ERROR. 
+* MAX_BUFFER_TIME_IN_SEC - Maximum number of seconds between buffer flushes regardless of how many messages are in the buffer. Defaults to 20.
+* MAX_TIME_TO_KEEP_DATA_IN_SEC - Maximum age of data kept in the database in seconds. Defaults to 7 days.
+* DATA_EVICT_INTERVAL_IN_SEC - Frequency, in seconds, to evaluate, and evict, aged out data. Defaults to 2 hours. 
 
 
 ## Local Execution
@@ -76,6 +79,15 @@ Once you are logged in via docker's cli tools you can run:
 ```make push```
 
 ## Changelog
+
+##### [0.2.3]() - 2020-08-20
+* Added support for data eviction 
+
+##### [0.2.2]() - 2020-08-19
+* Resolved issue with identifying precision of unix time
+
+##### [0.2.1]() - 2020-08-18
+* Added support for max buffer time
 
 ##### [0.2.0]() - 2020-08-12
 * Migrated to using a generic storage schema based on Postgres JSONB support

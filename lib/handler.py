@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from lib.location import Location
@@ -16,13 +16,17 @@ class MessageHandler:
     storing to the storage subsystem and coordinates storage of the message.
     """
     def __init__(self, storage_delegate: MessageStorageDelegate,
-                 buffer_size: int = 1, max_buffer_time_in_sec: int = 20) -> None:
+                 buffer_size, max_buffer_time_in_sec,
+                 max_time_to_keep_data_in_seconds, data_eviction_interval_in_seconds ) -> None:
         super().__init__()
         self.storage_delegate = storage_delegate
         self.buffer_size = buffer_size
         self.max_buffer_time_in_sec = max_buffer_time_in_sec
+        self.data_eviction_interval_in_seconds = data_eviction_interval_in_seconds
+        self.max_time_to_keep_data_in_seconds = max_time_to_keep_data_in_seconds
         self.buffer: List[Message] = []
-        self.last_buffer_flush = datetime.utcnow()
+        self.last_buffer_flush = datetime.now(timezone.utc)
+        self.last_eviction_time = datetime.now(timezone.utc)
 
     async def received_event(self, partition_context, event):
         """
@@ -50,16 +54,26 @@ class MessageHandler:
                     message_version=data.get('version'),
                     device_id=_data.get('deviceSerialNumber', _data.get('deviceName', None)),
                     device_time=_data.get('deviceTime', datetime.now().timestamp()),
-                    location=Location(longitude=_data.get('longitude', 0), latitude=_data.get('latitude', 0), altitude=_data.get('altitude', 0)),
+                    location=Location(longitude=_data.get('longitude', 0),
+                                      latitude=_data.get('latitude', 0),
+                                      altitude=_data.get('altitude', 0)),
                     data=_data
                 )
                 self.buffer.append(message)
 
-            delta = datetime.utcnow() - self.last_buffer_flush
-            if len(self.buffer) >= self.buffer_size or delta.total_seconds() > self.max_buffer_time_in_sec:
+            buffer_delta = datetime.now(timezone.utc) - self.last_buffer_flush
+            if len(self.buffer) >= self.buffer_size or buffer_delta.total_seconds() > self.max_buffer_time_in_sec:
                 self.flush_buffer()
 
             await partition_context.update_checkpoint(event)
+
+            evict_delta = datetime.now(timezone.utc) - self.last_eviction_time
+            if evict_delta.total_seconds() > self.data_eviction_interval_in_seconds:
+                eviction_cutoff = datetime.fromtimestamp(
+                    datetime.now(timezone.utc).timestamp() - self.max_time_to_keep_data_in_seconds, tz=timezone.utc
+                )
+                self.storage_delegate.evict(eviction_cutoff)
+
         except Exception as e:
             logger.exception(e)
 
@@ -69,4 +83,4 @@ class MessageHandler:
         except StorageError as se:
             logger.fatal(se)
         self.buffer.clear()
-        self.last_buffer_flush = datetime.utcnow()
+        self.last_buffer_flush = datetime.now(timezone.utc)

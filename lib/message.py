@@ -122,3 +122,9 @@ class Message(Persistent):
                    )
                    ON CONFLICT DO NOTHING;
                 """
+
+    @staticmethod
+    def delete_statement() -> str:
+        """Parametrized query for removing aged out messages"""
+        return """delete from public.message where device_timestamp <= %(device_timestamp)s"""
+

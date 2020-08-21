@@ -1,5 +1,6 @@
 import logging
 from abc import abstractmethod
+from datetime import datetime
 from pprint import pformat
 from typing import List
 
@@ -40,6 +41,15 @@ class MessageStorageDelegate:
         Save a :class:List of :class:Persistent objects to the database.
 
         :param List[Persistent] messages: The messages to save.
+        :return: None
+        """
+        pass
+
+    @abstractmethod
+    def evict(self, older_than: datetime):
+        """
+        Evict stored messages older than the provides timestamp.
+        :param datetime older_than: cutoff for data to keep
         :return: None
         """
         pass
@@ -86,6 +96,15 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
             self.connection.autocommit = True
             for statement in Message.create_table_statements():
                 cursor.execute(statement)
+
+    def evict(self, older_than: datetime):
+        statement = Message.delete_statement()
+        try:
+            with self.connection as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(statement, {'device_timestamp': older_than})
+        except Exception as e:
+            raise StorageError(f"Unable to store delete messages prior to [{older_than}]") from e
 
     def save(self, messages: List[Message]):
         """
