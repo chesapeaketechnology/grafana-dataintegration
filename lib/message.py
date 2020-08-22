@@ -67,11 +67,11 @@ class Message(Persistent):
 
         :return: str signature
         """
-        # d = vars(self)
-        # hash_string = ''.join([str(d[x]) for x in sorted(d.keys())])
-        # sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
-        # return sha_signature
-        return str(uuid.uuid4())
+        d = vars(self)
+        hash_string = ''.join([str(d[x]) for x in sorted(d.keys())])
+        sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
+        return sha_signature
+        # return str(uuid.uuid4())
 
     @staticmethod
     def table_name() -> str:
@@ -112,30 +112,18 @@ class Message(Persistent):
     @staticmethod
     def insert_statement() -> str:
         """Parameterized sql for inserting a message into the database."""
-        # return """INSERT INTO public.message
-        #           VALUES (
-        #             %(id)s,
-        #             %(message_type)s,
-        #             %(message_version)s,
-        #             %(device_id)s,
-        #             %(device_timestamp)s,
-        #             %(location)s,
-        #             %(json_data)s
-        #            )
-        #            ON CONFLICT DO NOTHING;
-        #         """
-
-        return """INSERT INTO public.message  
-                      VALUES (
-                        %(id)s, 
-                        %(message_type)s, 
-                        %(message_version)s, 
-                        %(device_id)s, 
-                        %(device_timestamp)s, 
-                        %(location)s, 
-                        %(json_data)s  
-                       );
-                    """
+        return """INSERT INTO public.message
+                  VALUES (
+                    %(id)s,
+                    %(message_type)s,
+                    %(message_version)s,
+                    %(device_id)s,
+                    %(device_timestamp)s,
+                    %(location)s,
+                    %(json_data)s
+                   )
+                   ON CONFLICT DO NOTHING;
+                """
 
     @staticmethod
     def delete_statement() -> str:
