@@ -3,7 +3,7 @@ CONSUMER_GROUP: "frontend"
 NAMESPACE: "fetest-dev-mqtt-eventhubs-namespace.servicebus.usgovcloudapi.net"
 SHARED_ACCESS_POLICY: "lte_message-auth-rule"
 BUFFER_SIZE: 50
-LOG_LEVEL: "INFO"
+LOG_LEVEL: "DEBUG"
 DB_HOST: "dbs-fetest-dev-data.postgres.database.usgovcloudapi.net"
 #DB_HOST: "docker.for.mac.host.internal"
 DB_PORT: "5432"

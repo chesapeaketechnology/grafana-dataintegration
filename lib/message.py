@@ -112,18 +112,30 @@ class Message(Persistent):
     @staticmethod
     def insert_statement() -> str:
         """Parameterized sql for inserting a message into the database."""
+        # return """INSERT INTO public.message
+        #           VALUES (
+        #             %(id)s,
+        #             %(message_type)s,
+        #             %(message_version)s,
+        #             %(device_id)s,
+        #             %(device_timestamp)s,
+        #             %(location)s,
+        #             %(json_data)s
+        #            )
+        #            ON CONFLICT DO NOTHING;
+        #         """
+
         return """INSERT INTO public.message  
-                  VALUES (
-                    %(id)s, 
-                    %(message_type)s, 
-                    %(message_version)s, 
-                    %(device_id)s, 
-                    %(device_timestamp)s, 
-                    %(location)s, 
-                    %(json_data)s  
-                   )
-                   ON CONFLICT DO NOTHING;
-                """
+                      VALUES (
+                        %(id)s, 
+                        %(message_type)s, 
+                        %(message_version)s, 
+                        %(device_id)s, 
+                        %(device_timestamp)s, 
+                        %(location)s, 
+                        %(json_data)s  
+                       );
+                    """
 
     @staticmethod
     def delete_statement() -> str:
