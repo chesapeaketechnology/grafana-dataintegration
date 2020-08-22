@@ -1,6 +1,7 @@
 import decimal
 import hashlib
 import json
+import uuid
 from datetime import datetime, timedelta
 
 from dateutil import parser
@@ -66,10 +67,11 @@ class Message(Persistent):
 
         :return: str signature
         """
-        d = vars(self)
-        hash_string = ''.join([str(d[x]) for x in sorted(d.keys())])
-        sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
-        return sha_signature
+        # d = vars(self)
+        # hash_string = ''.join([str(d[x]) for x in sorted(d.keys())])
+        # sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
+        # return sha_signature
+        return str(uuid.uuid4())
 
     @staticmethod
     def table_name() -> str:
