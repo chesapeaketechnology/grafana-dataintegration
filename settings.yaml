@@ -1,13 +1,13 @@
-TOPIC: "lte_message"
+TOPIC: "some_topic"
 CONSUMER_GROUP: "frontend"
-NAMESPACE: "fetest-dev-mqtt-eventhubs-namespace.servicebus.usgovcloudapi.net"
-SHARED_ACCESS_POLICY: "lte_message-auth-rule"
+NAMESPACE: "some_eventhub_namespace.servicebus.anazurecloud.net"
+SHARED_ACCESS_POLICY: "message-auth-rule"
 BUFFER_SIZE: 50
 LOG_LEVEL: "DEBUG"
-DB_HOST: "dbs-fetest-dev-data.postgres.database.usgovcloudapi.net"
+DB_HOST: "dbs-dev-data.postgres.database.anazurecloud.net"
 #DB_HOST: "docker.for.mac.host.internal"
 DB_PORT: "5432"
-DB_USER: "postgres@dbs-fetest-dev-data.postgres.database.usgovcloudapi.net"
+DB_USER: "someuser@dbs-dev-data.postgres.database.anazurecloud.net"
 DB_DATABASE: "grafana"
 DB_SCHEMA: "public"
 
