@@ -27,6 +27,7 @@ class ConsumerConfig:
     max_buffer_time_in_seconds: int = 20
     max_time_to_keep_data_in_seconds: int = timedelta(days=7).total_seconds()
     data_eviction_interval_in_seconds: int = timedelta(hours=2).total_seconds()
+    checkpoint_after_messages: int = 500
     checkpoint_store_conn_str: str = None
     checkpoint_store_container_name: str = None
 

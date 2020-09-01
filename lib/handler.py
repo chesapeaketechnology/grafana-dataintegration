@@ -17,16 +17,18 @@ class MessageHandler:
     """
     def __init__(self, storage_delegate: MessageStorageDelegate,
                  buffer_size, max_buffer_time_in_sec,
-                 max_time_to_keep_data_in_seconds, data_eviction_interval_in_seconds ) -> None:
+                 max_time_to_keep_data_in_seconds, data_eviction_interval_in_seconds, checkpoint_after_messages ) -> None:
         super().__init__()
         self.storage_delegate = storage_delegate
         self.buffer_size = buffer_size
         self.max_buffer_time_in_sec = max_buffer_time_in_sec
         self.data_eviction_interval_in_seconds = data_eviction_interval_in_seconds
         self.max_time_to_keep_data_in_seconds = max_time_to_keep_data_in_seconds
+        self.checkpoint_after_messages = checkpoint_after_messages
         self.buffer: List[Message] = []
         self.last_buffer_flush = datetime.now(timezone.utc)
         self.last_eviction_time = datetime.now(timezone.utc)
+        self.checkpoint_count = 0
 
     async def received_event(self, partition_context, event):
         """
@@ -63,9 +65,15 @@ class MessageHandler:
 
             buffer_delta = datetime.now(timezone.utc) - self.last_buffer_flush
             if len(self.buffer) >= self.buffer_size or buffer_delta.total_seconds() > self.max_buffer_time_in_sec:
+                self.checkpoint_count += len(self.buffer)
                 self.flush_buffer()
-                await partition_context.update_checkpoint(event)
-                logger.info("Checkpoint Updated.")
+                if self.checkpoint_count > self.checkpoint_after_messages:
+                    try:
+                        await partition_context.update_checkpoint(event)
+                        self.checkpoint_count = 0
+                        logger.info("Checkpoint Updated.")
+                    except Exception as ue:
+                        logger.error(str(ue))
 
             evict_delta = datetime.now(timezone.utc) - self.last_eviction_time
             if evict_delta.total_seconds() > self.data_eviction_interval_in_seconds:

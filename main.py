@@ -93,7 +93,8 @@ async def consume(config: ConsumerConfig, delegate: MessageStorageDelegate):
         buffer_size=config.buffer_size,
         max_buffer_time_in_sec=config.max_buffer_time_in_seconds,
         max_time_to_keep_data_in_seconds=config.max_time_to_keep_data_in_seconds,
-        data_eviction_interval_in_seconds=config.data_eviction_interval_in_seconds
+        data_eviction_interval_in_seconds=config.data_eviction_interval_in_seconds,
+        checkpoint_after_messages=config.checkpoint_after_messages
     )
 
     async with client:
