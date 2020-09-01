@@ -152,4 +152,6 @@ gen
 
 .DS_Store
 .secrets.yaml
+.secrets.yaml.example
+settings.yaml
 /.idea/

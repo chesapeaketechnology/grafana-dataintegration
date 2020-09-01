@@ -78,6 +78,36 @@ to the Chesapeake organization.  If you are not logged in, try:
 Once you are logged in via docker's cli tools you can run:
 ```make push```
 
+
+## Terraform
+The terraform files located in the terraform folder are used to deploy this integration into the datasci cloud.
+
+To use the terraform, you will need to build and push any changes into the docker image. From their, you'll need 
+to reference this terraform module from your main terraform script.  From example:
+
+```
+module "grafana-integration" {
+  source               = "github.com/chesapeaketechnology/grafana-dataintegration/terraform"
+  resource_group_name  = var.resource_group_name
+  system_name          = var.cluster_name
+  virtual_network_name = var.virtual_network_name
+  location             = var.location
+  environment          = var.environment
+  default_tags         = var.default_tags
+  network_profile_id   = var.network_profile_id
+  db_host              = module.datasci-data.server_fqdn
+  db_name              = "grafana"
+  db_password          = module.datasci-data.administrator_password
+  db_user              = "${module.datasci-data.administrator_login}@${module.datasci-data.server_name}"
+  eventhub_namespace   = var.eventhub_namespace
+  eventhub_keys        = var.eventhub_keys
+  eventhub_shared_access_policies = var.eventhub_shared_access_policies
+  topics               = var.topics
+  consul_server        = var.consul_server
+}
+```
+
+
 ## Changelog
 
 ##### [0.2.4]() - 2020-08-20
