@@ -86,7 +86,7 @@ resource "azurerm_container_group" "gfi_container_group" {
       memory = "2"
 
       ports {
-        port     = 3000
+        port     = (3000 + index(var.topics, container.key))
         protocol = "TCP"
       }
 
