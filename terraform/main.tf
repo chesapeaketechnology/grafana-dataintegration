@@ -83,7 +83,7 @@ resource "azurerm_container_group" "gfi_container_group" {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
       image = "chesapeaketechnology/grafana-dataintegration:0.2.5"
       cpu = "0.5"
-      memory = "1.5"
+      memory = "1"
 
       ports {
         port     = (3000 + index(tolist(var.topics), container.key))
