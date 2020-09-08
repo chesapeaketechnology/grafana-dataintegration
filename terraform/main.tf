@@ -27,6 +27,13 @@ resource "azurerm_storage_container" "gfi_storage_container" {
   container_access_type = "private"
 }
 
+locals {
+  max_cg_cpu = 2
+  max_cg_mem = 8
+  c_cpu = local.max_cg_cpu / length(var.topics)
+  c_mem = local.max_cg_mem / length(var.topics)
+}
+
 # Create a Container Group
 resource "azurerm_container_group" "gfi_container_group" {
   depends_on          = [var.eventhub_keys, var.eventhub_shared_access_policies, var.eventhub_namespace]
@@ -82,8 +89,8 @@ resource "azurerm_container_group" "gfi_container_group" {
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
       image = "chesapeaketechnology/grafana-dataintegration:0.2.5"
-      cpu = "0.25"
-      memory = "1.1"
+      cpu = local.c_cpu
+      memory = local.max_cg_mem
 
       ports {
         port     = (3000 + index(tolist(var.topics), container.key))
