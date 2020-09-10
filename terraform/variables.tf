@@ -60,32 +60,54 @@ variable "db_schema" {
   default     = "public"
 }
 
-variable "topics"{
-  type        = set(string)
-  description = "List of eventhubs to create under this eventhubs space"
+//variable "topics"{
+//  type        = set(string)
+//  description = "List of eventhubs to create under this eventhubs space"
+//}
+
+variable "topic_settings" {
+  description = "List of eventhub attributes that should be integrated into the grafana fe. The topics, keys, and policies should be aligned."
+  type        = object({
+    topics                          = set(string)
+    eventhub_keys                   = list(string)
+    eventhub_namespace              = string
+    eventhub_shared_access_policies = list(string)
+
+  })
 }
 
-variable "system_topics" {
-  type        = list(object({
-    topic                               = string
-    eventhub_namespace                  = string
-    eventhub_primary_key                = string
-    eventhub_shared_access_policy_name  = string
-  }))
+variable "system_topic_settings" {
+  description = "List of system eventhub attributes that should be integrated into the grafana fe. The topics, keys, and policies should be aligned."
+    type        = object({
+      topics                          = set(string)
+      eventhub_keys                   = list(string)
+      eventhub_namespace              = string
+      eventhub_shared_access_policies = list(string)
+
+    })
 }
 
-variable "eventhub_keys" {
-  type        = list(string)
-  description = "The access keys for eventhub; ordered the same as the topics."
-}
-variable "eventhub_namespace" {
-  type        = string
-  description = "The fully qualified eventhub namespace"
-}
-variable "eventhub_shared_access_policies" {
-  type        = list(string)
-  description = "A list of names of the eventhub shared access policy used to authenticate to eventhub; ordered the same as the topics."
-}
+//variable "system_topics" {
+//  type        = list(object({
+//    topic                               = string
+//    eventhub_namespace                  = string
+//    eventhub_primary_key                = string
+//    eventhub_shared_access_policy_name  = string
+//  }))
+//}
+
+//variable "eventhub_keys" {
+//  type        = list(string)
+//  description = "The access keys for eventhub; ordered the same as the topics."
+//}
+//variable "eventhub_namespace" {
+//  type        = string
+//  description = "The fully qualified eventhub namespace"
+//}
+//variable "eventhub_shared_access_policies" {
+//  type        = list(string)
+//  description = "A list of names of the eventhub shared access policy used to authenticate to eventhub; ordered the same as the topics."
+//}
 
 variable "checkpoint_store_connection_str" {
   type        = string

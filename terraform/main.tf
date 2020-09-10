@@ -30,14 +30,14 @@ resource "azurerm_storage_container" "gfi_storage_container" {
 locals {
   max_cg_cpu = 2
   max_cg_mem = 8
-  c_cpu = local.max_cg_cpu / length(var.topics)
-  c_mem = local.max_cg_mem / length(var.topics)
+  c_cpu = local.max_cg_cpu / length(var.topic_settings.topics)
+  c_mem = local.max_cg_mem / length(var.topic_settings.topics)
 }
 
 # Create a Container Group
 resource "azurerm_container_group" "gfi_fe_container_group" {
-  depends_on          = [var.eventhub_keys, var.eventhub_shared_access_policies, var.eventhub_namespace]
-  name                = join("-", [var.system_name, var.environment, "grafana-integration"])
+  depends_on          = [var.topic_settings.eventhub_keys, var.topic_settings.eventhub_shared_access_policies, var.topic_settings.eventhub_namespace]
+  name                = join("-", [var.system_name, var.environment, "grafana-fe-topic-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
   ip_address_type     = "private"
@@ -85,7 +85,7 @@ resource "azurerm_container_group" "gfi_fe_container_group" {
 
   # Grafana Server
   dynamic container {
-    for_each = var.topics
+    for_each = var.topic_settings.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
       image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
@@ -93,16 +93,16 @@ resource "azurerm_container_group" "gfi_fe_container_group" {
       memory = tonumber(format("%.1f", local.c_mem - 0.1))
 
       ports {
-        port     = (3000 + index(tolist(var.topics), container.key))
+        port     = (3000 + index(tolist(var.topic_settings.topics), container.key))
         protocol = "TCP"
       }
 
       environment_variables = {
         GDI_TOPIC = container.value,
         GDI_CONSUMER_GROUP = "frontend",
-        GDI_KEY = element(matchkeys(var.eventhub_keys, var.topics, [container.value]), 0),
-        GDI_NAMESPACE = var.eventhub_namespace,
-        GDI_SHARED_ACCESS_POLICY = element(matchkeys(var.eventhub_shared_access_policies, var.topics, [container.value]), 0),
+        GDI_KEY = element(matchkeys(var.topic_settings.eventhub_keys, var.topic_settings.topics, [container.value]), 0),
+        GDI_NAMESPACE = var.topic_settings.eventhub_namespace,
+        GDI_SHARED_ACCESS_POLICY = element(matchkeys(var.topic_settings.eventhub_shared_access_policies, var.topic_settings.topics, [container.value]), 0),
         GDI_DB_HOST = var.db_host,
         GDI_DB_PORT = var.db_port,
         GDI_DB_DATABASE = var.db_name,
@@ -121,9 +121,10 @@ resource "azurerm_container_group" "gfi_fe_container_group" {
   }
 }
 
-# Create a Container Group
-resource "azurerm_container_group" "gfi_system_container_group" {
-  name                = join("-", [var.system_name, var.environment, "grafana-system-integration"])
+# Create a Container Group for System Topics (backend only topics)
+resource "azurerm_container_group" "gfi_be_container_group" {
+  depends_on          = [var.system_topic_settings.eventhub_keys, var.system_topic_settings.eventhub_shared_access_policies, var.system_topic_settings.eventhub_namespace]
+  name                = join("-", [var.system_name, var.environment, "grafana-be-topic-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
   ip_address_type     = "private"
@@ -134,24 +135,24 @@ resource "azurerm_container_group" "gfi_system_container_group" {
 
   # Grafana Server
   dynamic container {
-    for_each = var.system_topics
+    for_each = var.system_topic_settings.topics
     content {
-      name = join("-", ["gfi", replace(container.value.topic, "_", "-"), "consumer"])
+      name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
       image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
-      cpu = 1
-      memory = 2
+      cpu = tonumber(format("%.2f", local.c_cpu - 0.01))
+      memory = tonumber(format("%.1f", local.c_mem - 0.1))
 
       ports {
-        port     = (3000 + index(tolist(var.system_topics), container.key))
+        port     = (3000 + index(tolist(var.system_topic_settings.topics), container.key))
         protocol = "TCP"
       }
 
       environment_variables = {
-        GDI_TOPIC = container.value.topic,
+        GDI_TOPIC = container.value,
         GDI_CONSUMER_GROUP = "frontend",
-        GDI_KEY = container.value.eventhub_primary_key,
-        GDI_NAMESPACE = container.value.eventhub_namespace,
-        GDI_SHARED_ACCESS_POLICY = container.value.eventhub_shared_access_policy_name,
+        GDI_KEY = element(matchkeys(var.system_topic_settings.eventhub_keys, var.system_topic_settings.topics, [container.value]), 0),
+        GDI_NAMESPACE = var.system_topic_settings.eventhub_namespace,
+        GDI_SHARED_ACCESS_POLICY = element(matchkeys(var.system_topic_settings.eventhub_shared_access_policies, var.system_topic_settings.topics, [container.value]), 0),
         GDI_DB_HOST = var.db_host,
         GDI_DB_PORT = var.db_port,
         GDI_DB_DATABASE = var.db_name,
@@ -169,4 +170,3 @@ resource "azurerm_container_group" "gfi_system_container_group" {
     }
   }
 }
-
