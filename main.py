@@ -108,6 +108,7 @@ if __name__ == '__main__':
     configuration = Configuration.get_config()
     logger.info(f"Starting Grafana DataIntegration with \n{pformat(vars(configuration))}")
     storage_delegate = PostgresMessageStorageDelegate(config=configuration.database)
+    storage_delegate.wait_for_and_setup_connection()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(consume(config=configuration.consumer, delegate=storage_delegate))
 

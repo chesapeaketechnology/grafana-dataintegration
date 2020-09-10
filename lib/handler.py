@@ -55,7 +55,7 @@ class MessageHandler:
                     message_type=data.get('messageType'),
                     message_version=data.get('version'),
                     device_id=_data.get('deviceSerialNumber', _data.get('deviceName', None)),
-                    device_time=_data.get('deviceTime', datetime.now().timestamp()),
+                    device_time=_data.get('deviceTime', _data.get('eventTime', datetime.now().timestamp())),
                     location=Location(longitude=_data.get('longitude', 0),
                                       latitude=_data.get('latitude', 0),
                                       altitude=_data.get('altitude', 0)),

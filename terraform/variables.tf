@@ -65,6 +65,15 @@ variable "topics"{
   description = "List of eventhubs to create under this eventhubs space"
 }
 
+variable "system_topics" {
+  type        = list(object({
+    topic                               = string
+    eventhub_namespace                  = string
+    eventhub_primary_key                = string
+    eventhub_shared_access_policy_name  = string
+  }))
+}
+
 variable "eventhub_keys" {
   type        = list(string)
   description = "The access keys for eventhub; ordered the same as the topics."

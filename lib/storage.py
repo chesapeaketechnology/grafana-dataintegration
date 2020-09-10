@@ -1,10 +1,12 @@
 import logging
+import time
 from abc import abstractmethod
 from datetime import datetime
 from pprint import pformat
 from typing import List
 
 import psycopg2
+from psycopg2 import OperationalError
 from psycopg2.extras import execute_batch
 
 from lib.config import DatabaseConfig
@@ -65,8 +67,35 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
         self.config = config
         self._connection = None
 
+    def wait_for_and_setup_connection(self):
+        self.__connect()
+        connection_attempts = 1
+        while not self.connected() and connection_attempts <= self.config.max_connection_attempts:
+            logger.info("Sleeping, waiting on database to become available.")
+            time.sleep(5)
+            self.__connect()
+            connection_attempts += 1
+
+        if self.connected():
+            if not self.table_exists():
+                self.create_table()
+        return self.connected()
+
     def connected(self):
         return self._connection and self._connection.closed == 0
+
+    def __connect(self):
+        try:
+            self._connection = psycopg2.connect(
+                host=self.config.host,
+                port=self.config.port,
+                database=self.config.database,
+                user=self.config.user,
+                password=self.config.password,
+                connect_timeout=5
+            )
+        except OperationalError as oe:
+            logger.error(oe)
 
     @property
     def connection(self):
@@ -75,13 +104,7 @@ class PostgresMessageStorageDelegate(MessageStorageDelegate):
         :return: db_api connection object
         """
         if not self.connected():
-            self._connection = psycopg2.connect(
-                host=self.config.host,
-                port=self.config.port,
-                database=self.config.database,
-                user=self.config.user,
-                password=self.config.password
-            )
+            self.__connect()
         return self._connection
 
     def table_exists(self):

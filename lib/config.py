@@ -43,6 +43,7 @@ class DatabaseConfig:
     user: str
     password: str
     schema: str
+    max_connection_attempts: int = 120
 
 
 @dataclass
@@ -94,7 +95,8 @@ class Configuration:
                 database=settings.get('DB_DATABASE'),
                 user=settings.get('DB_USER'),
                 password=settings.get('DB_PASSWORD'),
-                schema=settings.get('DB_SCHEMA')
+                schema=settings.get('DB_SCHEMA'),
+                max_connection_attempts=int(settings.get('DB_MAX_CONN_ATTEMPTS', 120))
             )
         )
 

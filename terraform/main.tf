@@ -35,7 +35,7 @@ locals {
 }
 
 # Create a Container Group
-resource "azurerm_container_group" "gfi_container_group" {
+resource "azurerm_container_group" "gfi_fe_container_group" {
   depends_on          = [var.eventhub_keys, var.eventhub_shared_access_policies, var.eventhub_namespace]
   name                = join("-", [var.system_name, var.environment, "grafana-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
@@ -88,7 +88,7 @@ resource "azurerm_container_group" "gfi_container_group" {
     for_each = var.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
-      image = "chesapeaketechnology/grafana-dataintegration:0.2.5"
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
       cpu = tonumber(format("%.2f", local.c_cpu - 0.01))
       memory = tonumber(format("%.1f", local.c_mem - 0.1))
 
@@ -120,3 +120,53 @@ resource "azurerm_container_group" "gfi_container_group" {
     }
   }
 }
+
+# Create a Container Group
+resource "azurerm_container_group" "gfi_system_container_group" {
+  name                = join("-", [var.system_name, var.environment, "grafana-system-integration"])
+  resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
+  location            = data.azurerm_resource_group.gfi_resource_group.location
+  ip_address_type     = "private"
+  network_profile_id  = var.network_profile_id
+  os_type             = "Linux"
+
+  tags = var.default_tags
+
+  # Grafana Server
+  dynamic container {
+    for_each = var.system_topics
+    content {
+      name = join("-", ["gfi", replace(container.value.topic, "_", "-"), "consumer"])
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
+      cpu = 1
+      memory = 2
+
+      ports {
+        port     = (3000 + index(tolist(var.system_topics), container.key))
+        protocol = "TCP"
+      }
+
+      environment_variables = {
+        GDI_TOPIC = container.value.topic,
+        GDI_CONSUMER_GROUP = "frontend",
+        GDI_KEY = container.value.eventhub_primary_key,
+        GDI_NAMESPACE = container.value.eventhub_namespace,
+        GDI_SHARED_ACCESS_POLICY = container.value.eventhub_shared_access_policy_name,
+        GDI_DB_HOST = var.db_host,
+        GDI_DB_PORT = var.db_port,
+        GDI_DB_DATABASE = var.db_name,
+        GDI_DB_USER = var.db_user,
+        GDI_DB_PASSWORD = var.db_password,
+        GDI_DB_SCHEMA = var.db_schema,
+        GDI_BUFFER_SIZE = 50,
+        GDI_LOG_LEVEL = "WARNING",
+        GDI_MAX_BUFFER_TIME_IN_SEC = 20,
+        GDI_MAX_TIME_TO_KEEP_DATA_IN_SEC = 604800,
+        GDI_DATA_EVICT_INTERVAL_IN_SEC = 7200,
+        GDI_CHECKPOINT_STORE_CONNECTION=azurerm_storage_account.gfi_storage_account.primary_blob_connection_string,
+        GDI_CHECKPOINT_STORE_CONTAINER=azurerm_storage_container.gfi_storage_container.name
+      }
+    }
+  }
+}
+
