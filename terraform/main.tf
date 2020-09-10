@@ -32,11 +32,13 @@ locals {
   max_cg_mem = 8
   c_cpu = local.max_cg_cpu / length(var.topic_settings.topics)
   c_mem = local.max_cg_mem / length(var.topic_settings.topics)
+  s_cpu = local.max_cg_cpu / length(var.system_topic_settings.topics)
+  s_mem = local.max_cg_mem / length(var.system_topic_settings.topics)
 }
 
 # Create a Container Group
 resource "azurerm_container_group" "gfi_fe_container_group" {
-  depends_on          = [var.topic_settings.eventhub_keys, var.topic_settings.eventhub_shared_access_policies, var.topic_settings.eventhub_namespace]
+  depends_on          = [var.topic_settings]
   name                = join("-", [var.system_name, var.environment, "grafana-fe-topic-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
@@ -123,7 +125,7 @@ resource "azurerm_container_group" "gfi_fe_container_group" {
 
 # Create a Container Group for System Topics (backend only topics)
 resource "azurerm_container_group" "gfi_be_container_group" {
-  depends_on          = [var.system_topic_settings.eventhub_keys, var.system_topic_settings.eventhub_shared_access_policies, var.system_topic_settings.eventhub_namespace]
+  depends_on          = [var.system_topic_settings]
   name                = join("-", [var.system_name, var.environment, "grafana-be-topic-integration"])
   resource_group_name = data.azurerm_resource_group.gfi_resource_group.name
   location            = data.azurerm_resource_group.gfi_resource_group.location
@@ -139,8 +141,8 @@ resource "azurerm_container_group" "gfi_be_container_group" {
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
       image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
-      cpu = tonumber(format("%.2f", local.c_cpu - 0.01))
-      memory = tonumber(format("%.1f", local.c_mem - 0.1))
+      cpu = tonumber(format("%.2f", local.s_cpu - 0.01))
+      memory = tonumber(format("%.1f", local.s_mem - 0.1))
 
       ports {
         port     = (3000 + index(tolist(var.system_topic_settings.topics), container.key))
