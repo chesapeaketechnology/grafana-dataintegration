@@ -3,11 +3,6 @@ variable "resource_group_name" {
   description = "Azure resource group in which to deploy"
 }
 
-variable "virtual_network_name" {
-  type        = string
-  description = "Name of Azure virtual network"
-}
-
 variable "location" {
   type        = string
   description = "Region to provision resources in"
