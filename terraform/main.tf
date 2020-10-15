@@ -7,6 +7,7 @@ provider "azurerm" {
   version = "~> 2.18.0"
   features {}
   disable_terraform_partner_id = true
+  skip_provider_registration = true
 }
 
 data "azurerm_resource_group" "gfi_resource_group" {
