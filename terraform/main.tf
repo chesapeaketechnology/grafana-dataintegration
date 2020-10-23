@@ -141,7 +141,7 @@ resource "azurerm_container_group" "gfi_be_container_group" {
     for_each = var.system_topic_settings.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
-      image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.7"
       cpu = tonumber(format("%.2f", local.s_cpu - 0.01))
       memory = tonumber(format("%.1f", local.s_mem - 0.1))
 
