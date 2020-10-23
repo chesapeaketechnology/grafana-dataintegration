@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List
 
 from lib.location import Location
-from lib.message import Message
+from lib.message import Message, MessageType
 from lib.storage import MessageStorageDelegate, StorageError
 import logging
 
@@ -55,6 +55,9 @@ class MessageHandler:
                     message_type=data.get('messageType'),
                     message_version=data.get('version'),
                     device_id=_data.get('deviceSerialNumber', _data.get('deviceName', None)),
+                    source_id=MessageType.get_source_id(message_type=data.get('messageType'),
+                                                        message_version=data.get('version'),
+                                                        message_data=_data),
                     device_time=_data.get('deviceTime', _data.get('eventTime', datetime.now().timestamp())),
                     location=Location(longitude=_data.get('longitude', 0),
                                       latitude=_data.get('latitude', 0),
