@@ -51,7 +51,7 @@ class MessageType:
             elif message_type == "CdmaRecord" and message_data.get('servingCell'):
                 return f"{message_data.get('sid')}-{message_data.get('nid')}-{message_data.get('bsid')}"
             elif message_type == "UmtsRecord" and message_data.get('servingCell'):
-                return f"{message_data.get('mcc')}-{message_data.get('mnc')}-{message_data.get('lac')}-{message_data.get('cid')}"
+                return f"{message_data.get('mcc')}-{message_data.get('mnc')}-{message_data.get('cid')}"
             elif message_type == "LteRecord" and message_data.get('servingCell'):
                 return f"{message_data.get('mcc')}-{message_data.get('mnc')}-{message_data.get('eci')}"
             elif message_type == "WifiBeaconRecord":

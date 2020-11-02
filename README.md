@@ -110,6 +110,13 @@ module "grafana-integration" {
 
 ## Changelog
 
+##### [0.2.8](https://github.com/chesapeaketechnology/grafana-dataintegration/releases/tag/v0.2.8) - 2020-11-02
+* Resolved issue with the data eviction being run on every incoming message.
+* Changed the source_id field for UMTS so that it does not include the LAC.
+
+##### [0.2.7](https://github.com/chesapeaketechnology/grafana-dataintegration/releases/tag/v0.2.7) - 2020-10-23
+* Added the source_id field
+
 ##### [0.2.4]() - 2020-08-20
 * Resolved issue with db connection contention 
 
