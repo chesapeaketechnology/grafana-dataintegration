@@ -91,7 +91,7 @@ resource "azurerm_container_group" "gfi_fe_container_group" {
     for_each = var.topic_settings.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
-      image = "chesapeaketechnology/grafana-dataintegration:0.2.6"
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.8"
       cpu = tonumber(format("%.2f", local.c_cpu - 0.01))
       memory = tonumber(format("%.1f", local.c_mem - 0.1))
 
@@ -141,7 +141,7 @@ resource "azurerm_container_group" "gfi_be_container_group" {
     for_each = var.system_topic_settings.topics
     content {
       name = join("-", ["gfi", replace(container.value, "_", "-"), "consumer"])
-      image = "chesapeaketechnology/grafana-dataintegration:0.2.7"
+      image = "chesapeaketechnology/grafana-dataintegration:0.2.8"
       cpu = tonumber(format("%.2f", local.s_cpu - 0.01))
       memory = tonumber(format("%.1f", local.s_mem - 0.1))
 
