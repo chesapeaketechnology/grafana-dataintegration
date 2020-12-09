@@ -80,6 +80,7 @@ class MessageHandler:
 
             evict_delta = datetime.now(timezone.utc) - self.last_eviction_time
             if evict_delta.total_seconds() > self.data_eviction_interval_in_seconds:
+                self.last_eviction_time = datetime.now(timezone.utc)
                 eviction_cutoff = datetime.fromtimestamp(
                     datetime.now(timezone.utc).timestamp() - self.max_time_to_keep_data_in_seconds, tz=timezone.utc
                 )
