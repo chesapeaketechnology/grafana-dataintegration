@@ -16,6 +16,7 @@ class MessageType:
     def get_source_id(message_type: str, message_version: str, message_data: dict):
         """
         -- SQL to update existing data
+        alter table message add column source_id text;
         select
             id,
             message_type,
