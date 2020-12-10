@@ -21,3 +21,10 @@ create trigger device_log_trigger
     after insert on message
     for each row
     execute procedure device_log();
+
+
+
+-- insert into device(device_id, last_seen)
+--     select device_id, max(device_timestamp) as last_seen from message where device_id is not null group by device_id
+-- on conflict
+-- do nothing ;
