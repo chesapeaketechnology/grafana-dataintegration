@@ -153,7 +153,7 @@ class Message(Persistent):
                     id varchar(64) not null 
                         constraint message_pk primary key,
                     message_type varchar(50),
-                    message_version varchar(10),
+                    message_version varchar(15),
                     device_id text,
                     device_timestamp timestamp with time zone,
                     location geography(POINT),

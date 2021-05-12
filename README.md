@@ -32,10 +32,10 @@ variables.
 ##### Optional
 * GDI_CONSUMER_GROUP - The EventHub consumer group. Defaults to '$default'.
 * GDI_BUFFER_SIZE - The number of messages to receive before writing to the database. Defaults to 1.
-* LOG_LEVEL - Can be NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL. Defaults to ERROR. 
-* MAX_BUFFER_TIME_IN_SEC - Maximum number of seconds between buffer flushes regardless of how many messages are in the buffer. Defaults to 20.
-* MAX_TIME_TO_KEEP_DATA_IN_SEC - Maximum age of data kept in the database in seconds. Defaults to 7 days.
-* DATA_EVICT_INTERVAL_IN_SEC - Frequency, in seconds, to evaluate, and evict, aged out data. Defaults to 2 hours. 
+* GDI_LOG_LEVEL - Can be NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL. Defaults to ERROR. 
+* GDI_MAX_BUFFER_TIME_IN_SEC - Maximum number of seconds between buffer flushes regardless of how many messages are in the buffer. Defaults to 20.
+* GDI_MAX_TIME_TO_KEEP_DATA_IN_SEC - Maximum age of data kept in the database in seconds. Defaults to 7 days.
+* GDI_DATA_EVICT_INTERVAL_IN_SEC - Frequency, in seconds, to evaluate, and evict, aged out data. Defaults to 2 hours. 
 
 
 ## Local Execution
