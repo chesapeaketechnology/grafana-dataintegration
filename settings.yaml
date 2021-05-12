@@ -3,7 +3,7 @@ CONSUMER_GROUP: "frontend"
 NAMESPACE: "some_eventhub_namespace.servicebus.anazurecloud.net"
 SHARED_ACCESS_POLICY: "message-auth-rule"
 BUFFER_SIZE: 50
-LOG_LEVEL: "DEBUG"
+LOG_LEVEL: "WARN"
 DB_HOST: "dbs-dev-data.postgres.database.anazurecloud.net"
 #DB_HOST: "docker.for.mac.host.internal"
 DB_PORT: "5432"

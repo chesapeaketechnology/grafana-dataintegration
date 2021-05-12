@@ -110,6 +110,10 @@ module "grafana-integration" {
 
 ## Changelog
 
+##### [0.3.0](https://github.com/chesapeaketechnology/grafana-dataintegration/releases/tag/v0.3.0) - 2021-05-12
+* Increased the version number character limit from 10 to 15.
+* Added a SQL trigger to capture device_ids to another table.
+
 ##### [0.2.8](https://github.com/chesapeaketechnology/grafana-dataintegration/releases/tag/v0.2.8) - 2020-11-02
 * Resolved issue with the data eviction being run on every incoming message.
 * Changed the source_id field for UMTS so that it does not include the LAC.
